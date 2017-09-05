@@ -6,12 +6,9 @@ import GdbMiOutput from './GdbMiOutput.js';
 import Breakpoint from './Breakpoint.jsx';
 import Memory from './Memory.js';
 import Modal from './Modal.js';
-import Threads from './Threads.js';
+import Threads from './Threads.jsx';
 import GdbConsoleComponent from './GdbConsole.js';
 import {Expressions} from './Variables.js';
-
-
-'use strict';
 
 /* global debug */
 /* global io */

@@ -22,7 +22,7 @@ import Registers from './Registers.js';
 import GdbMiOutput from './GdbMiOutput.js';
 import Settings from './Settings.jsx';
 import Modal from './Modal.js';
-import Threads from './Threads.js';
+import Threads from './Threads.jsx';
 import GdbCommandInput from './GdbCommandInput.js';
 import {Expressions, Locals, HoverVar} from './Variables.js';
 import GdbConsoleComponent from './GdbConsole.js';
@@ -117,6 +117,7 @@ Split(['#middle', '#bottom'], {
 // initialize components
 void(React)  // ReactDOM secretly depends on React; avoid "'React' is defined but never used  no-unused-vars"
 ReactDOM.render(<StatusBar/>, document.getElementById('status'))
+ReactDOM.render(<Threads/>, document.getElementById('threads'))
 // TODO make all these into react components
 // TODO remove jquery dependency
 GlobalEvents.init()
@@ -135,7 +136,6 @@ Expressions.init()
 Tree.init()
 HoverVar.init()
 Locals.init()
-Threads.init()
 VisibilityToggler.init()
 ShutdownGdbgui.init()
 Settings.init()
