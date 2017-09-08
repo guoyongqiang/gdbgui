@@ -1,7 +1,7 @@
 module.exports = {
   entry: './gdbgui/static/js/src/gdbgui.js',
   output: {
-    filename: './gdbgui/static/js/gdbgui.js'
+    filename: './gdbgui/static/js/build.js'
   },
   module: {
     rules: [
