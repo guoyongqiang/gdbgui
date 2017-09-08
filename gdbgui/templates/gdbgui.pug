@@ -1,6 +1,3 @@
-//- This is .pug file, which generates html. It used to be name jade.
-//- Try instant online conversion at http://www.html2jade.org/
-
 doctype html
 html
     head
@@ -62,16 +59,6 @@ html
                             li.divider(role='separator')
                             li
                                 a#shutdown_gdbgui.pointer(title='shutdown') Shutdown
-
-
-
-                //- div(style="width: 60px;")
-                    //- span#gdbgui_settings_button.glyphicon.glyphicon-cog.pointer.toggle_settings_view(style='padding-left: 5px', title='settings')
-
-                //-     span#shutdown_gdbgui.glyphicon.glyphicon-off.pointer(style='padding-left: 5px;', title='shutdown gdbgui (kill gdbgui server and close this tab)')
-
-                //-     a.glyphicon.glyphicon-heart.pointer(style='padding-left: 5px;', title='support gdbgui', href="todo")
-
 
             div.flexrow
                 //- displays source file path input, and dropdown
@@ -213,10 +200,6 @@ html
                 div(style='margin-top: 20px;')
                     button.btn.btn-success.toggle_settings_view(type='button', data-dismiss='modal') Close
 
-
-
-
-
     script.
         initial_data = JSON.parse('!{initial_data}')
         debug = JSON.parse('!{debug}')
@@ -230,4 +213,4 @@ html
     script(type="text/javascript" src='static/vendor/js/awesomeplete.min.js')
     script(type="text/javascript" src='static/vendor/js/socket.io-2.0.3.min.js')
     script(type="text/javascript" src='static/vendor/js/splitjs.min-1.2.0.js')
-    script(type="text/javascript" src='static/js/gdbgui.js?_=#{version}')
+    script(type="text/javascript" src='static/js/build.js?_=#{version}')

@@ -113,7 +113,7 @@ class Threads extends React.Component {
                 let is_current_thread_being_rendered = (parseInt(t.id) === this.state.current_thread_id)
                 , cls = is_current_thread_being_rendered ? 'bold' : ''
 
-                let thread_text = <span className='{cls}'>thread id {t.id}, core {t.core} ({t.store})</span>
+                let thread_text = <span className={`${cls}`}>thread id {t.id}, core {t.core} ({t.store})</span>
                 // add thread name
                 if(is_current_thread_being_rendered){
                     body.push(thread_text)

@@ -26,10 +26,9 @@ before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update          ; fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install homebrew/dupes/gdb; fi
 script:
-  # run unit tests
-  - python setup.py test
-
-  # ensure README.rst has no syntax errors so it displays nicely
-  # on the pypi website
-  - python setup.py checkdocs
-cache: pip
+  - make test
+cache:
+  pip: true
+  yarn: true
+  directories:
+    - node_modules
