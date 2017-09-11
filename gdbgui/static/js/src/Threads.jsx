@@ -2,7 +2,7 @@ import React from 'react';
 import {ReactTable} from './ReactTable.jsx';
 import {store} from './store.js';
 import GdbApi from './GdbApi.js';
-import Memory from './Memory.js';
+// import Memory from './Memory.js';
 
 /**
  * The Threads component
@@ -95,6 +95,7 @@ class Threads extends React.Component {
     }
 
     static get_stack_table(stack, selected_frame_num, cur_addr, is_current_thread_being_rendered, thread_id){
+        void(thread_id)
         var frame_num = 0
         let table_data = []
         for (let s of stack){
