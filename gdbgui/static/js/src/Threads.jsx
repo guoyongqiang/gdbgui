@@ -20,26 +20,13 @@ class Threads extends React.Component {
         this.setState(store._store)
     }
 
-    // init(){
-    //     new Reactor('#threads', Threads.render)
-
-    //     $("body").on("click", ".select_thread_id", Threads.click_select_thread_id)
-    //     $("body").on("click", ".select_frame", Threads.click_select_frame)
-    // }
     static select_thread_id(thread_id){
         GdbApi.run_gdb_command(`-thread-select ${thread_id}`)
         GdbApi.refresh_state_for_gdb_pause()
     }
-    /**
-     * select a frame and jump to the line in source code
-     * triggered when clicking on an object with the "select_frame" class
-     * must have data attributes: framenum, fullname, line
-     *
-     */
-    click_select_frame(e){
-        Threads.select_frame(e.currentTarget.dataset.framenum)
-    }
-    select_frame(framenum){
+
+    static select_frame(framenum){
+        // TODO get rid of this customevent
         window.dispatchEvent(new CustomEvent('event_select_frame', {'detail': parseInt(framenum)}))
     }
 
@@ -47,77 +34,69 @@ class Threads extends React.Component {
     render(){
         if(this.state.threads.length <= 0) return <span className='placeholder'>not paused</span>
 
-        let body = []
-        for(let t of this.state.threads){
-            if(this.state.interpreter === 'lldb'){
-                console.log('TODOLLDB - find current thread id')
-            }
+        let content = []
 
-            let is_current_thread_being_rendered = (parseInt(t.id) === this.state.current_thread_id)
-            , cls = ''
-
-            // add thread name
-            let onclick = ''
-            if(is_current_thread_being_rendered){
-                // pass
-                cls = 'bold'
-            }else{
-                onclick = ()=>{Threads.select_thread_id(t.id)}
-                cls = 'pointer'
-            }
-
-            let thread_text =
-                <div key={t.id}>
-                    <span onClick={onclick} className={`${cls}`}>thread id {t.id}, core {t.core} ({t.state})</span>
-                    <br key={t.id}/>
-                </div>
-            body.push(thread_text)
-
-            if(is_current_thread_being_rendered || store.get('interpreter') === 'lldb'){
-                // add stack if current thread
-                for (let s of this.state.stack){
-                    if(s.addr === t.frame.addr){
-                        body.push(Threads.get_stack_table(
-                            this.state.stack,
-                            this.state.selected_frame_num,
-                            t.frame.addr,
-                            is_current_thread_being_rendered,
-                            t.id))
-                        break
-                    }
+        for(let thread of this.state.threads){
+            // let is_current_thread_being_rendered = (parseInt(thread.id) === this.state.current_thread_id)
+            let stack = [thread.frame]
+            let is_current_thread_being_rendered = false
+            for (let frame of this.state.stack){
+                if(frame.addr === thread.frame.addr){
+                    stack = this.state.stack
+                    is_current_thread_being_rendered = true
                 }
-            }else{
-                // add frame if not current thread
-                body.push(Threads.get_stack_table([t.frame], this.state.selected_frame_num, '', is_current_thread_being_rendered, t.id))
             }
+            let row_data = Threads.get_row_data_for_stack(stack, this.state.selected_frame_num, thread.frame.addr, thread.id, is_current_thread_being_rendered)
+            content.push(Threads.get_thread_header(thread, is_current_thread_being_rendered))
+            content.push(<ReactTable data={row_data} style={{'fontSize': "0.9em"}} key={thread.id}  />)
         }
-        return <div>{body}</div>
+        return <div>{content}</div>
+    }
+    static get_thread_header(thread, is_current_thread_being_rendered){
+        // add thread name
+        let onclick = ''
+        , cls = ''
+        if(is_current_thread_being_rendered){
+            cls = 'bold'
+        }else{
+            onclick = ()=>{Threads.select_thread_id(thread.id)}
+            cls = 'pointer'
+        }
+        return <span key={'thread'+thread.id} onClick={onclick} className={`${cls}`}>thread id {thread.id}, core {thread.core} ({thread.state})</span>
+    }
+    static get_frame_row(frame, is_current_frame, thread_id, is_current_thread_being_rendered, frame_num_itr){
+        let onclick
+        let classes = []
+
+        if(is_current_frame){
+            // current frame, current thread
+            onclick = ()=>{}
+            classes.push('bold')
+        }else if (is_current_thread_being_rendered){
+            onclick = ()=>{Threads.select_frame(frame_num_itr)}
+            classes.push('pointer')
+        }else{
+            // different thread, allow user to switch threads
+            onclick = ()=>{Threads.select_thread_id(thread_id)}
+            classes.push('pointer')
+        }
+        let key = thread_id + frame_num_itr
+        return [<span key={key} className={classes.join(' ')} onClick={onclick}>{frame.func}</span>,
+                <span key={key + 1}>{frame.file}:{frame.line} {frame.addr}</span>]
     }
 
-    static get_stack_table(stack, selected_frame_num, cur_addr, is_current_thread_being_rendered, thread_id){
-        void(thread_id)
-        var frame_num = 0
-        let table_data = []
-        for (let s of stack){
-
-            // let arrow = (cur_addr === s.addr) ? `<span class='glyphicon glyphicon-arrow-right' style='margin-right: 4px;'></span>` : ''
-            let cls = []
-            if(selected_frame_num === frame_num && is_current_thread_being_rendered){
-                cls.push('bold')
-            }
-
-            let function_name = <span className={cls.join(' ')}>{s.func}</span>
-            console.log(s.fullname)
-            table_data.push([function_name, <span>{s.file}:{s.line} {s.addr}</span>])
-            frame_num++
+    static get_row_data_for_stack(stack, selected_frame_num, paused_addr, thread_id, is_current_thread_being_rendered){
+        let row_data = []
+        let frame_num_itr = 0
+        for (let frame of stack){
+            row_data.push(Threads.get_frame_row(frame, frame.addr === paused_addr, thread_id, is_current_thread_being_rendered, frame_num_itr))
+            frame_num_itr++
         }
 
         if(stack.length === 0){
-            table_data.push(['unknown', 'unknown'])
+            row_data.push(['unknown', 'unknown'])
         }
-
-        const header = ['function name', 'location']
-        return <ReactTable data={table_data} header={header} style={{'fontSize': "0.9em"}} key={cur_addr}  />
+        return row_data
     }
     static update_stack(stack){
         store.set('stack', stack)

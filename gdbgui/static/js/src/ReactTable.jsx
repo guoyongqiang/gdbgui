@@ -23,7 +23,10 @@ class TableRow extends React.Component {
 }
 
 
-class ReactTable extends React.Component {
+
+class ReactTable extends React.Component{
+
+    static defaultProps = { header: [] }
     render_row(row_data, i) {
         return (
             <TableRow data={row_data} key={i} />
