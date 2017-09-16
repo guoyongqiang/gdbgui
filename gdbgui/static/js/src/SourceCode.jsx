@@ -5,6 +5,8 @@ import Memory from './Memory.jsx';
 import constants from './constants.js';
 import Util from './Util.js';
 import Modal from './Modal.js';
+import React from 'react';
+
 
 /**
  * The source code component
@@ -14,15 +16,7 @@ const SourceCode = {
     el_title: $('#source_code_heading'),
     el_jump_to_line_input: $('#jump_to_line'),
     init: function(){
-        new Reactor('#source_code_heading', () => {
-            let source_file = store.get('rendered_source_file_fullname')
-            if(source_file){
-                return source_file
-                // TODO: make into a link: return `<a href="file:/${source_file}">${source_file}</a>`
-            }else{
-                return ''
-            }
-        })
+
         new Reactor('#code_table', SourceCode.render, {should_render: SourceCode.should_render, after_render: SourceCode.after_render})
 
         $("body").on("click", ".srccode td.line_num", SourceCode.click_gutter)
@@ -180,6 +174,7 @@ const SourceCode = {
 
         if(fullname === null){
             store.set('rendered_source_file_fullname', null)
+            store.set('current_line_of_source_code', null)
             return ''
 
         }else if(!SourceCode.is_cached(store.get('fullname_to_render'))){
@@ -189,8 +184,10 @@ const SourceCode = {
             if(source_file_does_not_exist){
                 if(!assembly_is_cached_for_this_addr){
                     if(addr === undefined){
+                        store.set('current_line_of_source_code', null)
                         return 'stopped on unknown address'
                     }
+                    store.set('current_line_of_source_code', null)
                     SourceCode.fetch_disassembly_for_missing_file(parseInt(addr))
                     return 'fetching assembly'
                 }

@@ -37,9 +37,10 @@ class Threads extends React.Component {
     }
 
     static select_frame(framenum){
-        GdbApi.select_frame(framenum)
         store.set('selected_frame_num', framenum)
+        store.set('current_line_of_source_code', null)
         store.set('make_current_line_visible', true)
+        GdbApi.select_frame(framenum)
     }
 
     render(){

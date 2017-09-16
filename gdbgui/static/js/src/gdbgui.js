@@ -16,6 +16,7 @@ import StatusBar from './StatusBar.jsx';
 import BinaryLoader from './BinaryLoader.js';
 import GlobalEvents from './GlobalEvents.js';
 import SourceCode from './SourceCode.jsx';
+import SourceCodeHeading from './SourceCodeHeading.jsx';
 import Breakpoint from './Breakpoint.jsx';
 import Tree from './Tree.js';
 import Registers from './Registers.js';
@@ -114,10 +115,10 @@ Split(['#middle', '#bottom'], {
     sizes: [70, 30],
 })
 
-// initialize components
 void(React)  // ReactDOM secretly depends on React; avoid "'React' is defined but never used  no-unused-vars"
 ReactDOM.render(<StatusBar/>, document.getElementById('status'))
 ReactDOM.render(<Threads/>, document.getElementById('threads'))
+ReactDOM.render(<SourceCodeHeading/>, document.getElementById('source_code_heading'))
 // TODO make all these into react components
 // TODO remove jquery dependency
 GlobalEvents.init()
