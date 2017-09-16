@@ -63,9 +63,9 @@ const store = {
         // update the store
         if(_value_changed(oldval, value)){
 
-            if(store.options.debug) {
-                console.log('stator ' + key, oldval, ' -> ', value)
-            }
+            // if(store.options.debug) {
+            //     console.log('stator ' + key, oldval, ' -> ', value)
+            // }
 
             _check_type_match(oldval, value, key)
 

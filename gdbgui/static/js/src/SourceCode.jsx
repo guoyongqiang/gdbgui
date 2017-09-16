@@ -1,12 +1,10 @@
 import {store, Reactor} from './store.js';
 import Breakpoint from './Breakpoint.jsx';
 import GdbApi from './GdbApi.js';
-import {Memory} from './Memory.jsx';
+import Memory from './Memory.jsx';
 import constants from './constants.js';
 import Util from './Util.js';
 import Modal from './Modal.js';
-
-'use strict';
 
 /**
  * The source code component
@@ -544,8 +542,11 @@ const SourceCode = {
      * addr (optional): instruction address to highlight
      */
     click_view_file: function(e){
-        store.set('fullname_to_render', e.currentTarget.dataset['fullname'])
-        store.set('current_line_of_source_code', parseInt(e.currentTarget.dataset['line']))
+        SourceCode.view_file(e.currentTarget.dataset['fullname'], parseInt(e.currentTarget.dataset['line']))
+    },
+    view_file: function(fullname, line){
+        store.set('fullname_to_render', fullname)
+        store.set('current_line_of_source_code', parseInt(line))
         store.set('make_current_line_visible', true)
     },
     keydown_jump_to_line: function(e){

@@ -22,8 +22,6 @@ class TableRow extends React.Component {
     }
 }
 
-
-
 class ReactTable extends React.Component{
 
     static defaultProps = { header: [] }
@@ -48,9 +46,10 @@ class ReactTable extends React.Component{
     }
 
     render(){
+        let classes = ['table', 'table-condensed'].concat(this.props.classes)
         return (
         <table
-            className={'table table-bordered table-condensed ' + this.props.classes}
+            className={classes.join(' ') }
             style={this.props.style}>
             <thead>
                 <tr>

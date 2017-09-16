@@ -1,17 +1,9 @@
 import {store, Reactor} from './store.js';
 import GdbApi from './GdbApi.js';
 import Util from './Util.js';
+import constants from './constants.js'
+import {MemoryLink} from './Links.jsx'
 import React from 'react';
-
-const ENTER_BUTTON_NUM = 13
-
-
-
-class MemoryLink extends React.Component {
-    render(){
-        return (<span className='pointer' onClick={()=>Memory.set_inputs_from_address(this.props.addr)}>{this.props.addr}</span>)
-    }
-}
 
 /**
  * The Memory component allows the user to view
@@ -27,7 +19,7 @@ const Memory = {
     init: function(){
         new Reactor('#memory', Memory.render)
 
-        $("body").on("click", ".memory_address", Memory.click_memory_address)
+        $("body").on("click", ".memadr", Memory.click_memory_address)
         $("body").on("click", "#read_preceding_memory", Memory.click_read_preceding_memory)
         $("body").on("click", "#read_more_memory", Memory.click_read_more_memory)
         Memory.el_start.keydown(Memory.keydown_in_memory_inputs)
@@ -39,13 +31,13 @@ const Memory = {
         window.addEventListener('event_inferior_program_paused', Memory.event_inferior_program_paused)
     },
     keydown_in_memory_inputs: function(e){
-        if (e.keyCode === ENTER_BUTTON_NUM){
+        if (e.keyCode === constants.ENTER_BUTTON_NUM){
             Memory.fetch_memory_from_inputs()
         }
     },
     click_memory_address: function(e){
         e.stopPropagation()
-        let addr = e.currentTarget.dataset['memory_address']
+        let addr = e.currentTarget.dataset['memadr']
         Memory.set_inputs_from_address(addr)
     },
     set_inputs_from_address: function(addr){
@@ -185,7 +177,11 @@ const Memory = {
     _make_addr_into_link: function(addr, name=addr){
         let _addr = addr
             , _name = name
-        return `<a class='pointer memory_address' data-memory_address='${_addr}'>${_name}</a>`
+        return `<a class='pointer memadr' data-memadr='${_addr}'>${_name}</a>`
+    },
+    _make_addr_into_link_react: function(addr, name=addr){
+        void(React)
+        return (<MemoryLink display_text={name} addr={addr} />)
     },
     /**
      * Scan arbitrary text for addresses, and turn those addresses into links
@@ -193,6 +189,27 @@ const Memory = {
      */
     make_addrs_into_links: function(text, name=undefined){
         return text.replace(/(0x[\d\w]+)/g, Memory._make_addr_into_link('$1', name))
+    },
+    /**
+     * @param text: string to convert address-like text into clickable components
+     * return react component
+     */
+    make_addrs_into_links_react: function(text){
+        let matches = text.match(/(0x[\d\w]+)/g)
+        if (text && matches && matches.length){
+            let addr = matches[0]
+            let leading_text = text.slice(0, text.indexOf(addr))
+            let component = Memory._make_addr_into_link_react(addr)
+            let trailing_text = text.slice(text.indexOf(addr) + addr.length, text.length)
+            let suffix_component = trailing_text
+            if(trailing_text){
+                // recursive call to turn additional addressed after the first
+                suffix_component = Memory.make_addrs_into_links_react(trailing_text)
+            }
+            return (<span>{leading_text}{component}{suffix_component}</span>)
+        }else{
+            return (<span>{text}</span>)
+        }
     },
     add_value_to_cache: function(hex_str, hex_val){
         // strip leading zeros off address provided by gdb
@@ -217,7 +234,4 @@ const Memory = {
     },
 }
 
-module.exports = {
-    Memory: Memory,
-    MemoryLink: MemoryLink
-}
+export default Memory

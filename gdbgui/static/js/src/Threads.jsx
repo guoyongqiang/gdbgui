@@ -2,20 +2,21 @@ import React from 'react';
 import {ReactTable} from './ReactTable.jsx';
 import {store} from './store.js';
 import GdbApi from './GdbApi.js';
-import {MemoryLink} from './Memory.jsx';
-// import Memory from './Memory.js';
+import Memory from './Memory.jsx';
+import {FileLink, MemoryLink} from './Links.jsx';
 
-/**
- * The Threads component
- */
-class FileLink extends React.Component {
+
+class FrameArguments extends React.Component {
+    render_frame_arg(frame_arg){
+        return ([frame_arg.name, frame_arg.value])
+    }
+
     render(){
-        return (
-            <div>
-                <span>{this.props.file}:{this.props.line} </span>
-                <MemoryLink addr={this.props.addr} />
-            </div>
-        )
+        let frame_args = this.props.args
+        if(!this.props.args){
+            frame_args = []
+        }
+        return(<ReactTable data={frame_args.map(this.render_frame_arg)} style={{'fontSize': "0.9em", 'borderWidth': '0'}} />)
     }
 }
 
@@ -48,20 +49,23 @@ class Threads extends React.Component {
 
         for(let thread of this.state.threads){
             let is_current_thread_being_rendered = (parseInt(thread.id) === this.state.current_thread_id)
-            let stack = Threads.get_stack_for_thread(thread.frame, this.state.stack)
+            let stack = Threads.get_stack_for_thread(thread.frame, this.state.stack, is_current_thread_being_rendered)
             let row_data = Threads.get_row_data_for_stack(stack, this.state.selected_frame_num, thread.frame.addr, thread.id, is_current_thread_being_rendered)
             content.push(Threads.get_thread_header(thread, is_current_thread_being_rendered))
-            content.push(<ReactTable data={row_data} style={{'fontSize': "0.9em"}} key={thread.id}  />)
+            content.push(<ReactTable data={row_data} style={{'fontSize': "0.9em", marginBottom: 0}} key={thread.id} header={['func', 'file', 'addr', 'args']} />)
         }
         return <div>{content}</div>
     }
 
-    static get_stack_for_thread(cur_frame, stack_data){
-        // check if any frames of the stack match to the address of the frame we're rendering
-        // if so, render the full stack for this thread
-        for (let frame of stack_data){
-            if(frame.addr === cur_frame.addr){
-                return stack_data
+    static get_stack_for_thread(cur_frame, stack_data, is_current_thread_being_rendered){
+        // each thread provides only the frame that it's paused on (cur_frame).
+        // we also have the output of `-stack-list-frames` (stack_data), which
+        // is the full stack of the selected thread
+        if (is_current_thread_being_rendered){
+            for (let frame of stack_data){
+                if(frame.addr === cur_frame.addr){
+                    return stack_data
+                }
             }
         }
         return [cur_frame]
@@ -77,42 +81,52 @@ class Threads extends React.Component {
             onclick = ()=>{Threads.select_thread_id(thread.id)}
             cls = 'pointer'
         }
-        return <span key={'thread'+thread.id} onClick={onclick} className={`${cls}`}>thread id {thread.id}, core {thread.core} ({thread.state})</span>
+        return <span key={'thread'+thread.id} onClick={onclick} className={`${cls}`}>
+                    {Memory.make_addrs_into_links_react(thread['target-id'])}, core {thread.core}, {thread.state}, id {thread.id}
+                </span>
     }
     static get_frame_row(frame, is_selected_frame, thread_id, is_current_thread_being_rendered, frame_num){
         let onclick
         let classes = []
+        let title
 
         if(is_selected_frame){
             // current frame, current thread
             onclick = ()=>{}
             classes.push('bold')
+            title = `this is the active frame of the selected thread (frame id ${frame_num})`
+
         }else if (is_current_thread_being_rendered){
             onclick = ()=>{Threads.select_frame(frame_num)}
             classes.push('pointer')
+            title = `click to select this frame (frame id ${frame_num})`
+
         }else{
             // different thread, allow user to switch threads
             onclick = ()=>{Threads.select_thread_id(thread_id)}
             classes.push('pointer')
+            title = `click to select this thead (thread id ${thread_id})`
         }
         let key = thread_id + frame_num
-        return [<span key={key} className={classes.join(' ')} onClick={onclick}>{frame.func}</span>,
-                // <span key={key + 1}>{frame.file}:{frame.line} {frame.addr}</span>,
-                <FileLink file={frame.file} line={frame.line} addr={frame.addr} />
-                ]
+
+        return [<span key={key} title={title} className={classes.join(' ')} onClick={onclick}>{frame.func}</span>,
+                <FileLink fullname={frame.fullname} file={frame.file} line={frame.line}/>,
+                <MemoryLink addr={frame.addr} />,
+                <FrameArguments args={frame.args} />
+            ]
     }
 
     static get_row_data_for_stack(stack, selected_frame_num, paused_addr, thread_id, is_current_thread_being_rendered){
         let row_data = []
         let frame_num = 0
         for (let frame of stack){
-            let is_selected_frame = (selected_frame_num === frame_num)
+            let is_selected_frame = (selected_frame_num === frame_num && is_current_thread_being_rendered)
             row_data.push(Threads.get_frame_row(frame, is_selected_frame, thread_id, is_current_thread_being_rendered, frame_num))
             frame_num++
         }
 
         if(stack.length === 0){
-            row_data.push(['unknown', 'unknown'])
+            row_data.push(['unknown', 'unknown', 'unknown'])
         }
         return row_data
     }

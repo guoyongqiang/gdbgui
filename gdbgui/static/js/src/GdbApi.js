@@ -4,7 +4,7 @@ import StatusBar from './StatusBar.jsx';
 import Registers from './Registers.js';
 import GdbMiOutput from './GdbMiOutput.js';
 import Breakpoint from './Breakpoint.jsx';
-import {Memory} from './Memory.jsx';
+import Memory from './Memory.jsx';
 import Modal from './Modal.js';
 import Threads from './Threads.jsx';
 import GdbConsoleComponent from './GdbConsole.js';
