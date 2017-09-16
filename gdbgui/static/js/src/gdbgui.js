@@ -26,7 +26,7 @@ import Threads from './Threads.jsx';
 import GdbCommandInput from './GdbCommandInput.js';
 import {Expressions, Locals, HoverVar} from './Variables.js';
 import GdbConsoleComponent from './GdbConsole.js';
-import Memory from './Memory.js';
+import {Memory} from './Memory.jsx';
 import GdbApi from './GdbApi.js';
 import SourceFileAutocomplete from './SourceFileAutocomplete.js';
 

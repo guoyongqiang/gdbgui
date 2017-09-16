@@ -1,8 +1,17 @@
 import {store, Reactor} from './store.js';
 import GdbApi from './GdbApi.js';
 import Util from './Util.js';
+import React from 'react';
 
 const ENTER_BUTTON_NUM = 13
+
+
+
+class MemoryLink extends React.Component {
+    render(){
+        return (<span className='pointer' onClick={()=>Memory.set_inputs_from_address(this.props.addr)}>{this.props.addr}</span>)
+    }
+}
 
 /**
  * The Memory component allows the user to view
@@ -36,8 +45,10 @@ const Memory = {
     },
     click_memory_address: function(e){
         e.stopPropagation()
-
         let addr = e.currentTarget.dataset['memory_address']
+        Memory.set_inputs_from_address(addr)
+    },
+    set_inputs_from_address: function(addr){
         // set inputs in DOM
         Memory.el_start.val('0x' + (parseInt(addr, 16)).toString(16))
         Memory.el_end.val('0x' + (parseInt(addr,16) + Memory.DEFAULT_ADDRESS_DELTA_BYTES).toString(16))
@@ -206,4 +217,7 @@ const Memory = {
     },
 }
 
-export default Memory
+module.exports = {
+    Memory: Memory,
+    MemoryLink: MemoryLink
+}

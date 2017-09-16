@@ -1,7 +1,7 @@
 import {store, Reactor} from './store.js';
 import Breakpoint from './Breakpoint.jsx';
 import GdbApi from './GdbApi.js';
-import Memory from './Memory.js';
+import {Memory} from './Memory.jsx';
 import constants from './constants.js';
 import Util from './Util.js';
 import Modal from './Modal.js';

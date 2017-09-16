@@ -1,0 +1,73 @@
+import React from 'react';
+
+class TableRow extends React.Component {
+    get_tds() {
+        let tds = []
+        for (let i in this.props.data) {
+            tds.push(
+                <td key={i}>
+                    {this.props.data[i]}
+                </td>
+            )
+        }
+        return tds
+    }
+
+    render() {
+        return (
+            <tr className={this.className}>
+                {this.get_tds()}
+            </tr>
+        )
+    }
+}
+
+
+<<<<<<< HEAD
+
+class ReactTable extends React.Component{
+
+    static defaultProps = { header: [] }
+=======
+class ReactTable extends React.Component {
+>>>>>>> f8f51b11f301bf76752fd3e604b588795175cd57
+    render_row(row_data, i) {
+        return (
+            <TableRow data={row_data} key={i} />
+        )
+    }
+
+    render_head(){
+        let ths = []
+        , i = 0
+        for (let th_data of this.props.header) {
+            ths.push(
+                <th key={i}>
+                    {th_data}
+                </th>
+            )
+            i++
+        }
+        return ths
+    }
+
+    render(){
+        return (
+        <table
+            className={'table table-bordered table-condensed ' + this.props.classes}
+            style={this.props.style}>
+            <thead>
+                <tr>
+                     {this.render_head()}
+                 </tr>
+        </thead>
+        <tbody>
+                {this.props.data.map(this.render_row)}
+        </tbody>
+        </table>)
+    }
+}
+
+module.exports ={
+    ReactTable: ReactTable
+}

@@ -1,6 +1,6 @@
 import {store, Reactor} from './store.js';
 import GdbApi from './GdbApi.js';
-import Memory from './Memory.js';
+import {Memory} from './Memory.jsx';
 import Util from './Util.js';
 import constants from './constants.js';
 

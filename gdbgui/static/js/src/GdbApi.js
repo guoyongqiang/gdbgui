@@ -4,7 +4,7 @@ import StatusBar from './StatusBar.jsx';
 import Registers from './Registers.js';
 import GdbMiOutput from './GdbMiOutput.js';
 import Breakpoint from './Breakpoint.jsx';
-import Memory from './Memory.js';
+import {Memory} from './Memory.jsx';
 import Modal from './Modal.js';
 import Threads from './Threads.jsx';
 import GdbConsoleComponent from './GdbConsole.js';
@@ -48,7 +48,6 @@ const GdbApi = {
         window.addEventListener('event_inferior_program_exited', GdbApi.event_inferior_program_exited)
         window.addEventListener('event_inferior_program_running', GdbApi.event_inferior_program_running)
         window.addEventListener('event_inferior_program_paused', GdbApi.event_inferior_program_paused)
-        window.addEventListener('event_select_frame', GdbApi.event_select_frame)
 
         const TIMEOUT_MIN = 5
         GdbApi.socket = io.connect(`http://${document.domain}:${location.port}/gdb_listener`, {timeout: TIMEOUT_MIN * 60 * 1000});
@@ -151,10 +150,11 @@ const GdbApi = {
     event_inferior_program_paused: function(){
         GdbApi.refresh_state_for_gdb_pause()
     },
-    event_select_frame: function(e){
-        let framenum = e.detail
-        GdbApi.run_gdb_command(`-stack-select-frame ${framenum}`)
-        GdbApi.refresh_state_for_gdb_pause()
+    select_frame: function(framenum){
+        GdbApi.run_command_and_refresh_state(`-stack-select-frame ${framenum}`)
+    },
+    select_thread_id: function(thread_id){
+        GdbApi.run_command_and_refresh_state(`-thread-select ${thread_id}`)
     },
     /**
      * Before sending a command, set a timeout to notify the user that something might be wrong

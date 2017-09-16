@@ -17,7 +17,6 @@ const GlobalEvents = {
         window.addEventListener('event_inferior_program_exited', GlobalEvents.event_inferior_program_exited)
         window.addEventListener('event_inferior_program_running', GlobalEvents.event_inferior_program_running)
         window.addEventListener('event_inferior_program_paused', GlobalEvents.event_inferior_program_paused)
-        window.addEventListener('event_select_frame', GlobalEvents.event_select_frame)
         // make sure saved preferences are set/valid
         if(localStorage.getItem('highlight_source_code') === null){
             localStorage.setItem('highlight_source_code', JSON.stringify(true))
@@ -80,11 +79,6 @@ const GlobalEvents = {
         store.set('make_current_line_visible', true)
         store.set('current_line_of_source_code', parseInt(frame.line))
         store.set('current_assembly_address', frame.addr)
-    },
-    event_select_frame: function(e){
-        let selected_frame_num = e.detail || 0
-        store.set('selected_frame_num', selected_frame_num)
-        store.set('make_current_line_visible', true)
     },
 }
 

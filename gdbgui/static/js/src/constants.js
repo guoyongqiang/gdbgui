@@ -1,5 +1,3 @@
- 'use strict';
-
 let constants = {
     'ENTER_BUTTON_NUM': 13,
     'LEFT_BUTTON_NUM': 37,
@@ -9,8 +7,10 @@ let constants = {
     'COMMA_BUTTON_NUM': 188,
     'DATE_FORMAT': 'dddd, MMMM Do YYYY, h:mm:ss a',
     'ANIMATED_REFRESH_ICON': "<span class='glyphicon glyphicon-refresh glyphicon-refresh-animate'></span>",
+    'IGNORE_ERRORS_TOKEN_STR': '1',
     'DISASSEMBLY_FOR_MISSING_FILE_STR': '2',
 }
+constants['IGNORE_ERRORS_TOKEN_INT'] = parseInt(constants.IGNORE_ERRORS_TOKEN_STR)
 constants['DISASSEMBLY_FOR_MISSING_FILE_INT'] = parseInt(constants.DISASSEMBLY_FOR_MISSING_FILE_STR)
 
 export default Object.freeze(constants)
