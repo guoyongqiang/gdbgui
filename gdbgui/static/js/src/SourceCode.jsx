@@ -14,7 +14,10 @@ class SourceCode extends React.Component {
         super()
 
         // bind methods
-        this.get_line = this.get_line.bind(this)
+        this.get_render_state = this.get_render_state.bind(this)
+        this.get_body_assembly_only = this.get_body_assembly_only.bind(this)
+        this._get_source_line = this._get_source_line.bind(this)
+        this._get_assm_line = this._get_assm_line.bind(this)
         this.click_gutter = this.click_gutter.bind(this)
         this.is_paused_on_this_line = this.is_paused_on_this_line.bind(this)
 
@@ -39,7 +42,7 @@ class SourceCode extends React.Component {
     click_gutter(line_num){
         Breakpoint.toggle_breakpoint(this.state.fullname_to_render, line_num)
     }
-    get_line(source, line_should_flash, is_paused_on_this_line, line_num_being_rendered, has_bkpt, has_disabled_bkpt){
+    _get_source_line(source, line_should_flash, is_paused_on_this_line, line_num_being_rendered, has_bkpt, has_disabled_bkpt){
         let row_class = ['srccode']
 
         if(is_paused_on_this_line){
@@ -67,6 +70,18 @@ class SourceCode extends React.Component {
 
             </tr>)
     }
+
+    _get_assm_line(key, assm){
+        return (
+            <tr key={key}>
+            <td>
+            {assm.address}
+            </td>
+            </tr>
+        )
+
+    }
+
     is_paused_on_this_line(line_num_being_rendered, gdb_paused_on_line){
         if(this.state.paused_on_frame){
             return (line_num_being_rendered === gdb_paused_on_line &&
@@ -75,32 +90,64 @@ class SourceCode extends React.Component {
             return false
         }
     }
-    get_body(){
+
+    get_body_source_only(source_code){
+        let body = []
 
         let bkpt_lines = Breakpoint.get_breakpoint_lines_for_file(this.state.fullname_to_render)
         , disabled_breakpoint_lines = Breakpoint.get_disabled_breakpoint_lines_for_file(this.state.fullname_to_render)
-        let obj = SourceCode.get_current_source_to_display()
-        if(obj && obj.source_code){
-            let body = []
-            let gdb_paused_on_line = this.state.paused_on_frame ? parseInt(this.state.paused_on_frame.line) : 0
-            for (let i = 0; i < obj.source_code.length; i++){
 
-                let line_num_being_rendered = i + 1
-                let has_bkpt = bkpt_lines.indexOf(line_num_being_rendered) !== -1
-                let has_disabled_bkpt = disabled_breakpoint_lines.indexOf(line_num_being_rendered) !== -1
-                let is_paused_on_this_line = this.is_paused_on_this_line(line_num_being_rendered, gdb_paused_on_line)
+        let gdb_paused_on_line = this.state.paused_on_frame ? parseInt(this.state.paused_on_frame.line) : 0
+        for (let i = 0; i < source_code.length; i++){
 
-                body.push(this.get_line(obj.source_code[i],
-                    this.state.line_of_source_to_flash === line_num_being_rendered,
-                    is_paused_on_this_line,
-                    line_num_being_rendered,
-                    has_bkpt,
-                    has_disabled_bkpt))
-            }
-            return body
-        }else{
-            return(<tr><td></td></tr>)
+            let line_num_being_rendered = i + 1
+            let has_bkpt = bkpt_lines.indexOf(line_num_being_rendered) !== -1
+            let has_disabled_bkpt = disabled_breakpoint_lines.indexOf(line_num_being_rendered) !== -1
+            let is_paused_on_this_line = this.is_paused_on_this_line(line_num_being_rendered, gdb_paused_on_line)
+
+            body.push(this._get_source_line(source_code[i],
+                this.state.line_of_source_to_flash === line_num_being_rendered,
+                is_paused_on_this_line,
+                line_num_being_rendered,
+                has_bkpt,
+                has_disabled_bkpt))
         }
+        return body
+    }
+
+    get_body_source_and_assembly(){
+    }
+
+    get_body_assembly_only(){
+        let assm_array = this.state.disassembly_for_missing_file
+        let body = []
+        let i = 0
+        for(let assm of assm_array){
+            body.push(this._get_assm_line(i, assm))
+            i++
+        }
+        return body
+    }
+
+    get_body_empty(){
+        return(<tr><td></td></tr>)
+    }
+
+    get_body(){
+        switch(this.get_render_state()){
+            case 'SOURCE':{
+                let obj = FileOps.get_source_file_obj_from_cache(this.state.fullname_to_render)
+                return this.get_body_source_only(obj.source_code)
+            }
+            case 'ASSM':{
+                return this.get_body_assembly_only()
+            }
+
+            default:{
+                return this.get_body_empty()
+            }
+        }
+
     }
     render(){
         return(<table id='code_table' style={{width: '100%', 'height': '100%'}}>
@@ -122,13 +169,17 @@ class SourceCode extends React.Component {
         store.set('line_of_source_to_flash', parseInt(line))
         store.set('make_current_line_visible', true)
     }
-    static get_current_source_to_display(){
-        let fullname = store.get('fullname_to_render')
-        if (FileOps.is_cached(fullname)){
-            return FileOps.get_source_file_obj_from_cache(fullname)
-        }else{
-            return 'todo'
+    get_render_state(){
+        if (FileOps.is_cached(this.state.fullname_to_render)){
+            return 'SOURCE'
         }
+
+        let paused_addr = this.state.paused_on_frame ? this.state.paused_on_frame.addr : null
+        if (this.state.disassembly_for_missing_file.some(obj => obj.address === paused_addr)){
+            return 'ASSM'
+        }
+
+        return 'EMPTY'
     }
 
     // TODO deprecate

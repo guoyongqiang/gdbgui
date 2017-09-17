@@ -1,3 +1,4 @@
+
 import {store} from './store.js';
 import GdbApi from './GdbApi.js';
 import constants from './constants.js';
@@ -12,6 +13,7 @@ const FileOps = {
         let fullname = store.get('fullname_to_render')
         , cached_source_file = FileOps.is_cached(fullname)
         , is_missing = FileOps.is_missing_file(fullname)
+        , is_missing_assm = store.get('disassembly_for_missing_file').length === 0
 
         // we have file cached
         if(fullname && cached_source_file){
@@ -21,8 +23,10 @@ const FileOps = {
             // we don't have file cached, try to get it
             FileOps.fetch_file(fullname)
 
-        } else if(fullname && is_missing){
+        } else if(fullname && is_missing && is_missing_assm){
             // get disassembly
+            let addr = store.get('current_assembly_address')
+            FileOps.fetch_disassembly_for_missing_file(addr)
 
         } else if (!fullname){
             // don't do anything. no file, don't need to get disassembly
@@ -192,8 +196,8 @@ const FileOps = {
             return
         }
 
-        let start = hex_addr
-        , end = hex_addr + 100
+        let start = parseInt(hex_addr, 16)
+        , end = start + 100
         GdbApi.run_gdb_command(constants.DISASSEMBLY_FOR_MISSING_FILE_STR + `-data-disassemble -s 0x${start.toString((16))} -e 0x${end.toString((16))} -- 0`)
     },
     /**
