@@ -38,7 +38,7 @@ class Threads extends React.Component {
 
     static select_frame(framenum){
         store.set('selected_frame_num', framenum)
-        store.set('current_line_of_source_code', null)
+        store.set('line_of_source_to_flash', null)
         store.set('make_current_line_visible', true)
         GdbApi.select_frame(framenum)
     }
@@ -82,7 +82,7 @@ class Threads extends React.Component {
             onclick = ()=>{Threads.select_thread_id(thread.id)}
             cls = 'pointer'
         }
-        return <span key={'thread'+thread.id} onClick={onclick} className={`${cls}`}>
+        return <span key={'thread'+thread.id} onClick={onclick} className={`${cls}`} style={{fontSize: '0.9em'}}>
                     {Memory.make_addrs_into_links_react(thread['target-id'])}, core {thread.core}, {thread.state}, id {thread.id}
                 </span>
     }
@@ -134,8 +134,8 @@ class Threads extends React.Component {
     static update_stack(stack){
         store.set('stack', stack)
         store.set('paused_on_frame', stack[store.get('selected_frame_num') || 0])
-        store.set('fullname_to_render', store.get('paused_on_frame').fullname)
-        store.set('current_line_of_source_code', parseInt(store.get('paused_on_frame').line))
+        store.set('fullname_to_render', store.get('paused_on_frame') ? store.get('paused_on_frame').fullname : {})
+        store.set('line_of_source_to_flash', parseInt(store.get('paused_on_frame').line))
         store.set('current_assembly_address', store.get('paused_on_frame').addr)
         store.set('make_current_line_visible', true)
     }

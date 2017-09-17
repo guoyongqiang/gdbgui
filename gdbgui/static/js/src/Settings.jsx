@@ -1,5 +1,6 @@
 import {store, Reactor} from './store.js';
 import Modal from './Modal.js';
+import FileOps from './FileOps.js';
 
 /**
  * Settings modal when clicking the gear icon
@@ -144,11 +145,10 @@ const Settings = {
         localStorage.setItem('theme', e.currentTarget.value)
     },
     syntax_highlight_selector_changed: function(e){
+        // remove all cached source files, since the cache contains syntax highlighting, or is lacking it
+        FileOps.clear_cached_source_files()
         // update preference in store
         store.set('highlight_source_code', e.currentTarget.value === 'on')
-        // remove all cached source files, since the cache contains syntax highlighting, or is lacking it
-        store.set('cached_source_files', [])
-        store.set('rendered_source_file_fullname', null)
         // save preference for later
         localStorage.setItem('highlight_source_code', JSON.stringify(store.get('highlight_source_code')))
     },

@@ -54,7 +54,7 @@ const GlobalEvents = {
         }
     },
     clear_program_state: function(){
-        store.set('current_line_of_source_code', undefined)
+        store.set('line_of_source_to_flash', undefined)
         store.set('paused_on_frame', undefined)
         store.set('selected_frame_num', 0)
         store.set('current_thread_id', undefined)
@@ -77,7 +77,7 @@ const GlobalEvents = {
         store.set('paused_on_frame', frame)
         store.set('fullname_to_render', frame.fullname)
         store.set('make_current_line_visible', true)
-        store.set('current_line_of_source_code', parseInt(frame.line))
+        store.set('line_of_source_to_flash', parseInt(frame.line))
         store.set('current_assembly_address', frame.addr)
     },
 }

@@ -4,7 +4,6 @@ import React from 'react';
 
 
 class MemoryLink extends React.Component {
-
     constructor(props){
         super();
         this.parsed_addr = `0x${parseInt(props.addr, 16).toString(16)}`  // remove leading zeros
@@ -23,25 +22,22 @@ class MemoryLink extends React.Component {
 
 class FileLink extends React.Component {
     render(){
+        let line = parseInt(this.props.line)
         let onclick = null
         , cls = ''
-
-        if(this.props.fullname){
-            onclick = ()=>SourceCode.view_file(this.props.fullname, this.props.line)
-            cls = 'pointer'
+        if (!this.props.file || !line){
+            line = ''
         }
-
         let sep = ''
-        if(this.props.file && this.props.line){
+        if(line && line !== 0){
             sep = ':'
         }
-
-        let line_num = this.props.line
-        if (!this.props.file){
-            line_num = ''
+        if(this.props.fullname){
+            onclick = ()=>SourceCode.view_file(this.props.fullname, line)
+            cls = 'pointer'
         }
         return (<span onClick={onclick} className={cls} title={`click to view ${this.props.fullname}`}>
-                    {this.props.file}{sep}{line_num}
+                    {this.props.file}{sep}{line}
                 </span>)
     }
 }

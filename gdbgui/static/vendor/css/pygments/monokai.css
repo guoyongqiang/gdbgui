@@ -1,5 +1,5 @@
 /* gdbgui-specific stuff*/
-.monokai#code_container {
+.monokai#code_body {
     background-color: #333;
     color: grey;
 }

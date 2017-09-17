@@ -1,5 +1,5 @@
 /* gdbgui-specific stuff */
-.default#code_container {
+.default#code_body {
     background-color: white;
     color: black;
 }

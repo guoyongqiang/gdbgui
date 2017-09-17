@@ -1,7 +1,8 @@
 import {store, Reactor} from './store.js';
+import GdbApi from './GdbApi.js';
 import SourceCode from './SourceCode.jsx';
 import Util from './Util.js';
-import GdbApi from './GdbApi.js';
+import FileOps from './FileOps.js';
 
 /**
  * The breakpoint table component
@@ -29,9 +30,9 @@ const Breakpoint = {
             , source_line = '(file not cached)'
 
             // if we have the source file cached, we can display the line of text
-            let source_file_obj = SourceCode.get_source_file_obj_from_cache(b.fullname_to_display)
+            let source_file_obj = FileOps.get_source_file_obj_from_cache(b.fullname_to_display)
             if(source_file_obj && source_file_obj.source_code && source_file_obj.source_code.length >= (b.line - 1)){
-                let syntax_highlighted_line = SourceCode.get_source_file_obj_from_cache(b.fullname_to_display).source_code[b.line - 1]
+                let syntax_highlighted_line = FileOps.get_source_file_obj_from_cache(b.fullname_to_display).source_code[b.line - 1]
                 , line = _.trim(Util.get_text_from_html(syntax_highlighted_line))
 
                 if(line.length > MAX_CHARS_TO_SHOW_FROM_SOURCE){
@@ -121,12 +122,40 @@ const Breakpoint = {
         return bkpt_html
     },
     remove_breakpoint_if_present: function(fullname, line){
-        for (let b of store.get('breakpoints')){
-            if (b.fullname === fullname && b.line === line){
-                let cmd = [GdbApi.get_delete_break_cmd(b.number), GdbApi.get_break_list_cmd()]
-                GdbApi.run_gdb_command(cmd)
+        if(Breakpoint.has_breakpoint(fullname, line)){
+            let number = Breakpoint.get_breakpoint_number(fullname, line)
+            let cmd = [GdbApi.get_delete_break_cmd(number), GdbApi.get_break_list_cmd()]
+            GdbApi.run_gdb_command(cmd)
+        }
+    },
+    toggle_breakpoint: function(fullname, line){
+        if(Breakpoint.has_breakpoint(fullname, line)){
+            Breakpoint.remove_breakpoint_if_present(fullname, line)
+        }else{
+            Breakpoint.add_breakpoint(fullname, line)
+        }
+    },
+    add_breakpoint: function(fullname, line){
+        GdbApi.run_gdb_command(GdbApi.get_insert_break_cmd(fullname, line))
+    },
+    has_breakpoint: function(fullname, line){
+        let bkpts = store.get('breakpoints')
+        for (let b of bkpts){
+            console.log(b)
+            if (b.fullname === fullname && b.line == line){
+                return true
             }
         }
+        return false
+    },
+    get_breakpoint_number: function(fullname, line){
+        let bkpts = store.get('breakpoints')
+        for (let b of bkpts){
+            if (b.fullname === fullname && b.line == line){
+                return b.number
+            }
+        }
+        console.error(`could not find breakpoint for ${fullname}:${line}`)
     },
     get_delete_breakpoint_link: function(breakpoint_number, text='remove'){
         return `<a class="gdb_cmd pointer" data-cmd0="${GdbApi.get_delete_break_cmd(breakpoint_number)}" data-cmd1="${GdbApi.get_break_list_cmd()}">${text}</a>`
