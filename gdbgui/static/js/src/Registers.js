@@ -3,16 +3,9 @@ import Util from './Util.js';
 import Memory from './Memory.jsx';
 import GdbApi from './GdbApi.js';
 
-'use strict';
-
-/**
- * The Registers component
- */
 const Registers = {
     init: function(){
         new Reactor('#registers', Registers.render)
-        window.addEventListener('event_inferior_program_exited', Registers.event_inferior_program_exited)
-        window.addEventListener('event_inferior_program_running', Registers.event_inferior_program_running)
     },
     get_update_cmds: function(){
         let cmds = []
@@ -40,11 +33,8 @@ const Registers = {
         store.set('previous_register_values', {})
         store.set('current_register_values', {})
     },
-    event_inferior_program_exited: function(){
+    inferior_program_exited: function(){
         Registers.clear_cached_values()
-    },
-    event_inferior_program_running: function(){
-        // Registers.render_not_paused()
     },
     render: function(){
         let num_register_names = store.get('register_names').length

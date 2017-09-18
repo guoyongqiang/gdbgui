@@ -25,10 +25,6 @@ const Memory = {
         Memory.el_start.keydown(Memory.keydown_in_memory_inputs)
         Memory.el_end.keydown(Memory.keydown_in_memory_inputs)
         Memory.el_bytes_per_line.keydown(Memory.keydown_in_memory_inputs)
-
-        window.addEventListener('event_inferior_program_exited', Memory.event_inferior_program_exited)
-        window.addEventListener('event_inferior_program_running', Memory.event_inferior_program_running)
-        window.addEventListener('event_inferior_program_paused', Memory.event_inferior_program_paused)
     },
     keydown_in_memory_inputs: function(e){
         if (e.keyCode === constants.ENTER_BUTTON_NUM){
@@ -222,15 +218,6 @@ const Memory = {
     },
     clear_cache: function(){
         store.set('memory_cache', {})
-    },
-    event_inferior_program_exited: function(){
-        Memory.clear_cache()
-    },
-    event_inferior_program_running: function(){
-        Memory.clear_cache()
-    },
-    event_inferior_program_paused: function(){
-        // Memory.render()
     },
 }
 

@@ -202,10 +202,8 @@ class SourceCode extends React.Component {
 //         $('#refresh_cached_source_files').click(SourceCode.refresh_cached_source_files)
 //         SourceCode.el_jump_to_line_input.keydown(SourceCode.keydown_jump_to_line)
 
-//         window.addEventListener('event_inferior_program_exited', SourceCode.event_inferior_program_exited)
-//         window.addEventListener('event_inferior_program_running', SourceCode.event_inferior_program_running)
 //     },
-//     event_inferior_program_exited: function(){
+//     inferior_program_exited: function(){
 //         SourceCode.remove_line_highlights()
 //     },
 //     event_inferior_program_running: function(){

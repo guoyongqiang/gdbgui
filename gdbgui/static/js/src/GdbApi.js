@@ -2,6 +2,7 @@ import {store} from './store.js';
 import Registers from './Registers.js';
 import Memory from './Memory.jsx';
 import Modal from './Modal.js';
+import Actions from './Actions.js';
 import GdbConsoleComponent from './GdbConsole.js';
 import {Expressions} from './Variables.js';
 import constants from './constants.js';
@@ -35,11 +36,6 @@ const GdbApi = {
         $('#next_instruction_button').click(GdbApi.click_next_instruction_button)
         $('#step_instruction_button').click(GdbApi.click_step_instruction_button)
         $('#send_interrupt_button').click(GdbApi.click_send_interrupt_button)
-
-        window.addEventListener('event_inferior_program_exited', GdbApi.event_inferior_program_exited)
-        window.addEventListener('event_inferior_program_running', GdbApi.event_inferior_program_running)
-        window.addEventListener('event_inferior_program_paused', GdbApi.event_inferior_program_paused)
-
 
         const TIMEOUT_MIN = 5
         /* global io */
@@ -76,22 +72,22 @@ const GdbApi = {
     },
     _waiting_for_response_timeout: null,
     click_run_button: function(){
-        window.dispatchEvent(new Event('event_inferior_program_running'))
+        Actions.inferior_program_running()
         GdbApi.run_gdb_command('-exec-run')
     },
     inferior_is_paused: function(){
         return ([undefined, 'paused'].indexOf(store.get('inferior_program')) >= 0)
     },
     click_continue_button: function(){
-        window.dispatchEvent(new Event('event_inferior_program_running'))
+        Actions.inferior_program_running()
         GdbApi.run_gdb_command('-exec-continue')
     },
     click_next_button: function(){
-        window.dispatchEvent(new Event('event_inferior_program_running'))
+        Actions.inferior_program_running()
         GdbApi.run_gdb_command('-exec-next')
     },
     click_step_button: function(){
-        window.dispatchEvent(new Event('event_inferior_program_running'))
+        Actions.inferior_program_running()
         GdbApi.run_gdb_command('-exec-step')
     },
     click_return_button: function(){
@@ -100,18 +96,18 @@ const GdbApi = {
         // That means we do NOT dispatch the event `event_inferior_program_running`, because it's not, in fact, running.
         // The return also doesn't even indicate that it's paused, so we need to manually trigger the event here.
         GdbApi.run_gdb_command('-exec-return')
-        window.dispatchEvent(new Event('event_inferior_program_paused'))
+        Actions.inferior_program_running()
     },
     click_next_instruction_button: function(){
-        window.dispatchEvent(new Event('event_inferior_program_running'))
+        Actions.inferior_program_running()
         GdbApi.run_gdb_command('-exec-next-instruction')
     },
     click_step_instruction_button: function(){
-        window.dispatchEvent(new Event('event_inferior_program_running'))
+        Actions.inferior_program_running()
         GdbApi.run_gdb_command('-exec-step-instruction')
     },
     click_send_interrupt_button: function(){
-        window.dispatchEvent(new Event('event_inferior_program_running'))
+        Actions.inferior_program_running()
         GdbApi.run_gdb_command('-exec-interrupt')
     },
     click_gdb_cmd_button: function(e){
@@ -136,12 +132,6 @@ const GdbApi = {
         }else{
             console.error('expected cmd or cmd0 [cmd1, cmd2, ...] data attribute(s) on element')
         }
-    },
-    event_inferior_program_running: function(){
-        // do nothing
-    },
-    event_inferior_program_paused: function(){
-        GdbApi.refresh_state_for_gdb_pause()
     },
     select_frame: function(framenum){
         GdbApi.run_command_and_refresh_state(`-stack-select-frame ${framenum}`)
@@ -252,12 +242,6 @@ const GdbApi = {
         // List the frames currently on the stack.
         cmds.push('-stack-list-frames')
         return cmds
-    },
-    /**
-     * Request relevant store information from gdb to refresh UI
-     */
-    refresh_state_for_gdb_pause: function(){
-        GdbApi.run_gdb_command(GdbApi._get_refresh_state_for_pause_cmds())
     },
     refresh_breakpoints: function(){
         GdbApi.run_gdb_command([GdbApi.get_break_list_cmd()])

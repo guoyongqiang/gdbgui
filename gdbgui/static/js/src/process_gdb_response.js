@@ -10,6 +10,7 @@ import GdbApi from './GdbApi.js';
 import GdbConsoleComponent from './GdbConsole.js';
 import {Expressions} from './Variables.js';
 import Modal from './Modal.js';
+import Actions from './Actions.js';
 
 
 /**
@@ -154,7 +155,7 @@ const process_gdb_response = function(response_array){
 
             // we tried to load a binary, but gdb couldn't find it
             if(r.payload.msg === `${store.get('inferior_binary_path')}: No such file or directory.`){
-                window.dispatchEvent(new Event('event_inferior_program_exited'))
+                Actions.inferior_program_exited()
             }
 
         } else if (r.type === 'console'){
@@ -176,13 +177,13 @@ const process_gdb_response = function(response_array){
 
         if (r.message && r.message === 'stopped' && r.payload && r.payload.reason){
             if(r.payload.reason.includes('exited')){
-                window.dispatchEvent(new Event('event_inferior_program_exited'))
+                Actions.inferior_program_exited()
 
             }else if (r.payload.reason.includes('breakpoint-hit') || r.payload.reason.includes('end-stepping-range')){
                 if (r.payload['new-thread-id']){
                     Threads.set_thread_id(r.payload['new-thread-id'])
                 }
-                window.dispatchEvent(new CustomEvent('event_inferior_program_paused', {'detail': r.payload.frame}))
+                Actions.inferior_program_paused(r.payload.frame)
 
             }else if (r.payload.reason === 'signal-received'){
                 GdbConsoleComponent.add('gdbgui noticed a signal was recieved. ' +

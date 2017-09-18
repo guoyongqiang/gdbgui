@@ -14,9 +14,6 @@ const GlobalEvents = {
         $('body').on('keydown', GlobalEvents.body_keydown)
         $('[data-toggle="tooltip"]').tooltip()
 
-        window.addEventListener('event_inferior_program_exited', GlobalEvents.event_inferior_program_exited)
-        window.addEventListener('event_inferior_program_running', GlobalEvents.event_inferior_program_running)
-        window.addEventListener('event_inferior_program_paused', GlobalEvents.event_inferior_program_paused)
         // make sure saved preferences are set/valid
         if(localStorage.getItem('highlight_source_code') === null){
             localStorage.setItem('highlight_source_code', JSON.stringify(true))
@@ -52,33 +49,6 @@ const GlobalEvents = {
                 GdbApi.click_step_instruction_button()
             }
         }
-    },
-    clear_program_state: function(){
-        store.set('line_of_source_to_flash', undefined)
-        store.set('paused_on_frame', undefined)
-        store.set('selected_frame_num', 0)
-        store.set('current_thread_id', undefined)
-        store.set('stack', [])
-        store.set('locals', [])
-    },
-    event_inferior_program_exited: function(){
-        store.set('disassembly_for_missing_file', [])
-        store.set('inferior_program', 'exited')
-        store.set('root_gdb_tree_var', null)
-        GlobalEvents.clear_program_state()
-    },
-    event_inferior_program_running: function(){
-        store.set('inferior_program', 'running')
-        GlobalEvents.clear_program_state()
-    },
-    event_inferior_program_paused: function(e){
-        let frame = e.detail || {}
-        store.set('inferior_program', 'paused')
-        store.set('paused_on_frame', frame)
-        store.set('fullname_to_render', frame.fullname)
-        store.set('make_current_line_visible', true)
-        store.set('line_of_source_to_flash', parseInt(frame.line))
-        store.set('current_assembly_address', frame.addr)
     },
 }
 
