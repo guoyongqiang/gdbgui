@@ -2,9 +2,9 @@ import {store} from './store.js';
 import React from 'react';
 import FileOps from './FileOps.js';
 import Breakpoint from './Breakpoint.jsx';
+import constants from './constants.js';
 // import GdbApi from './GdbApi.js';
 // import Memory from './Memory.jsx';
-// import constants from './constants.js';
 // import Util from './Util.js';
 // import Modal from './Modal.js';
 
@@ -14,7 +14,6 @@ class SourceCode extends React.Component {
         super()
 
         // bind methods
-        this.get_render_state = this.get_render_state.bind(this)
         this.get_body_assembly_only = this.get_body_assembly_only.bind(this)
         this._get_source_line = this._get_source_line.bind(this)
         this._get_assm_line = this._get_assm_line.bind(this)
@@ -37,6 +36,7 @@ class SourceCode extends React.Component {
             line_of_source_to_flash: store._store.line_of_source_to_flash,
             paused_on_frame: store._store.paused_on_frame,
             breakpoints: store._store.breakpoints,
+            source_code_state: store._store.source_code_state,
         }
     }
     click_gutter(line_num){
@@ -134,15 +134,30 @@ class SourceCode extends React.Component {
     }
 
     get_body(){
-        switch(this.get_render_state()){
-            case 'SOURCE':{
+        const states = constants.source_code_states
+        switch(this.state.source_code_state){
+            case states.ASSM_AND_SOURCE_CACHED:{
+                return(<tr><td>todo: render assm and source</td></tr>)
+            }
+            case states.SOURCE_CACHED:{
                 let obj = FileOps.get_source_file_obj_from_cache(this.state.fullname_to_render)
+                if(!obj){
+                    return this.get_body_empty()
+                }
                 return this.get_body_source_only(obj.source_code)
             }
-            case 'ASSM':{
+            case states.FETCHING_SOURCE:{
+                return(<tr><td>fetching source, please wait</td></tr>)
+            }
+            case states.ASSM_CACHED:{
                 return this.get_body_assembly_only()
             }
-
+            case states.FETCHING_ASSM:{
+                return(<tr><td>fetching assembly, please wait</td></tr>)
+            }
+            case states.NONE_AVAILABLE:{
+                return this.get_body_empty()
+            }
             default:{
                 return this.get_body_empty()
             }
@@ -156,31 +171,24 @@ class SourceCode extends React.Component {
                 </tbody>
             </table>)
     }
-    componentDidUpdate(){
-        // store.set('line_of_source_to_flash', 0)
-        store.set('rendered_source', {
-            fullname: this.state.fullname_to_render,
-            line: this.state.paused_on_frame && this.state.paused_on_frame.fullname === this.state.fullname_to_render ? parseInt(this.state.paused_on_frame.line) : 0
-            }
-        )
-    }
+
     static view_file(fullname, line){
         store.set('fullname_to_render', fullname)
         store.set('line_of_source_to_flash', parseInt(line))
         store.set('make_current_line_visible', true)
     }
-    get_render_state(){
-        if (FileOps.is_cached(this.state.fullname_to_render)){
-            return 'SOURCE'
-        }
+    // get_render_state(){
+    //     if (FileOps.is_cached(this.state.fullname_to_render)){
+    //         return 'SOURCE'
+    //     }
 
-        let paused_addr = this.state.paused_on_frame ? this.state.paused_on_frame.addr : null
-        if (this.state.disassembly_for_missing_file.some(obj => obj.address === paused_addr)){
-            return 'ASSM'
-        }
+    //     let paused_addr = this.state.paused_on_frame ? this.state.paused_on_frame.addr : null
+    //     if (this.state.disassembly_for_missing_file.some(obj => obj.address === paused_addr)){
+    //         return 'ASSM'
+    //     }
 
-        return 'EMPTY'
-    }
+    //     return 'EMPTY'
+    // }
 
     // TODO deprecate
     static get_attrs_to_view_file(fullname, line=0){

@@ -1,3 +1,5 @@
+import constants from './constants.js';
+
 /*
  * The store can be changed via store.set() and retrieved via store.get(). store.get() does not return references to objects, it returns new objects.
  * store is only mutable with calls to store.set().
@@ -332,13 +334,13 @@ const initial_store_data = {
     fullname_to_render: null,
     line_of_source_to_flash: null,
     current_assembly_address: null,
-    rendered_source: {},
+    // rendered_source: {},
     has_unrendered_assembly: false,  // set to true when new assembly has been fetched and is cached in browser, but not displayed in source code window
     make_current_line_visible: false,  // set to true when source code window should jump to current line
     cached_source_files: [],  // list with keys fullname, source_code
     disassembly_for_missing_file: [],  // mi response object. Only fetched when there currently paused frame refers to a file that doesn't exist or is undefined
     missing_files: [],  // files that were attempted to be fetched but did not exist on the local filesystem
-
+    source_code_state: constants.source_code_states.NONE_AVAILABLE,
 
     // binary selection
     inferior_binary_path: null,

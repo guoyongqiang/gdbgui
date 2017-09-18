@@ -9,6 +9,15 @@ let constants = {
     'ANIMATED_REFRESH_ICON': "<span class='glyphicon glyphicon-refresh glyphicon-refresh-animate'></span>",
     'IGNORE_ERRORS_TOKEN_STR': '1',
     'DISASSEMBLY_FOR_MISSING_FILE_STR': '2',
+
+    'source_code_states': {
+        ASSM_AND_SOURCE_CACHED: 'ASSM_AND_SOURCE_CACHED',
+        SOURCE_CACHED: 'SOURCE_CACHED',
+        FETCHING_SOURCE: 'FETCHING_SOURCE',
+        ASSM_CACHED: 'ASSM_CACHED',
+        FETCHING_ASSM: 'FETCHING_ASSM',
+        NONE_AVAILABLE: 'NONE_AVAILABLE',
+    }
 }
 constants['IGNORE_ERRORS_TOKEN_INT'] = parseInt(constants.IGNORE_ERRORS_TOKEN_STR)
 constants['DISASSEMBLY_FOR_MISSING_FILE_INT'] = parseInt(constants.DISASSEMBLY_FOR_MISSING_FILE_STR)
