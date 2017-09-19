@@ -1,3 +1,17 @@
+import {store} from './store.js';
+import GdbMiOutput from './GdbMiOutput.js';
+import Breakpoint from './Breakpoint.jsx';
+import constants from './constants.js';
+import Threads from './Threads.jsx';
+import FileOps from './FileOps.js';
+import StatusBar from './StatusBar.jsx';
+import Memory from './Memory.jsx';
+import GdbApi from './GdbApi.js';
+import GdbConsoleComponent from './GdbConsole.js';
+import {Expressions} from './Variables.js';
+import Modal from './Modal.js';
+import Actions from './Actions.js';
+
 
 /**
  * This is the main callback when receiving a response from gdb.
@@ -13,7 +27,7 @@ const process_gdb_response = function(response_array){
      * @return (bool): true if response should be ignored
      */
     , ignore = function(response){
-        return response.token === IGNORE_ERRORS_TOKEN_INT && response.message === 'error'
+        return response.token === constants.IGNORE_ERRORS_TOKEN_INT && response.message === 'error'
     }
 
     for (let r of response_array){
@@ -46,7 +60,7 @@ const process_gdb_response = function(response_array){
                 if(_.isString(bkpt.fullname_to_display) && bkpt.fullname_to_display.startsWith('/')){
                     // a normal breakpoint or child breakpoint
                     store.set('fullname_to_render', bkpt.fullname_to_display)
-                    store.set('current_line_of_source_code', parseInt(bkpt.line))
+                    store.set('line_of_source_to_flash', parseInt(bkpt.line))
                     store.set('make_current_line_visible', true)
                 }
 
@@ -77,7 +91,7 @@ const process_gdb_response = function(response_array){
                 store.set('current_register_values', r.payload['register-values'])
             }
             if ('asm_insns' in r.payload) {
-                SourceCode.save_new_assembly(r.payload.asm_insns, r.token)
+                FileOps.save_new_assembly(r.payload.asm_insns, r.token)
             }
             if ('files' in r.payload){
                 if(r.payload.files.length > 0){
@@ -141,7 +155,7 @@ const process_gdb_response = function(response_array){
 
             // we tried to load a binary, but gdb couldn't find it
             if(r.payload.msg === `${store.get('inferior_binary_path')}: No such file or directory.`){
-                window.dispatchEvent(new Event('event_inferior_program_exited'))
+                Actions.inferior_program_exited()
             }
 
         } else if (r.type === 'console'){
@@ -163,13 +177,13 @@ const process_gdb_response = function(response_array){
 
         if (r.message && r.message === 'stopped' && r.payload && r.payload.reason){
             if(r.payload.reason.includes('exited')){
-                window.dispatchEvent(new Event('event_inferior_program_exited'))
+                Actions.inferior_program_exited()
 
             }else if (r.payload.reason.includes('breakpoint-hit') || r.payload.reason.includes('end-stepping-range')){
                 if (r.payload['new-thread-id']){
                     Threads.set_thread_id(r.payload['new-thread-id'])
                 }
-                window.dispatchEvent(new CustomEvent('event_inferior_program_paused', {'detail': r.payload.frame}))
+                Actions.inferior_program_paused(r.payload.frame)
 
             }else if (r.payload.reason === 'signal-received'){
                 GdbConsoleComponent.add('gdbgui noticed a signal was recieved. ' +

@@ -28,7 +28,7 @@ td{
 .monospace{
     font-family: Menlo,Monaco,Consolas,"Courier New",monospace;
 }
-.memory_address{
+.memadr, .memadr_react{  /* todo - migrate everything to react, then rename memadr_react to memadr  */
     color: #489ce4;
     text-decoration: none;
 }

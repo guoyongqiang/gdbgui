@@ -51,7 +51,7 @@ const SourceFileAutocomplete = {
          Awesomplete.$('#source_file_input').addEventListener('awesomplete-selectcomplete', function(e){
             let fullname = e.currentTarget.value
             store.set('fullname_to_render', fullname)
-            store.set('current_line_of_source_code', 1)
+            store.set('line_of_source_to_flash', 1)
             store.set('make_current_line_visible', true)
         })
     },
@@ -80,7 +80,7 @@ const SourceFileAutocomplete = {
             [fullname, line] = Util.parse_fullname_and_line(user_input, default_line)
 
             store.set('fullname_to_render',fullname)
-            store.set('current_line_of_source_code', line)
+            store.set('line_of_source_to_flash', line)
             store.set('make_current_line_visible', true)
         }else if (store.get('source_file_paths').length === 0){
             // source file list has not been fetched yet, so fetch it

@@ -1,22 +1,14 @@
 import {store} from './store.js';
-import SourceCode from './SourceCode.jsx';
-import StatusBar from './StatusBar.jsx';
 import Registers from './Registers.js';
-import GdbMiOutput from './GdbMiOutput.js';
-import Breakpoint from './Breakpoint.jsx';
-import Memory from './Memory.js';
+import Memory from './Memory.jsx';
 import Modal from './Modal.js';
-import Threads from './Threads.jsx';
+import Actions from './Actions.js';
 import GdbConsoleComponent from './GdbConsole.js';
 import {Expressions} from './Variables.js';
+import constants from './constants.js';
+import process_gdb_response from './process_gdb_response.js';
 
 /* global debug */
-/* global io */
-
-// gdbgui convention to prefix MI commands with this number to ignore errors when response is received
-// https://sourceware.org/gdb/onlinedocs/gdb/GDB_002fMI-Input-Syntax.html#GDB_002fMI-Input-Syntax
-const IGNORE_ERRORS_TOKEN_STR = '1'
-, IGNORE_ERRORS_TOKEN_INT = parseInt(IGNORE_ERRORS_TOKEN_STR)
 
 // print to console if debug is true
 let debug_print
@@ -45,12 +37,8 @@ const GdbApi = {
         $('#step_instruction_button').click(GdbApi.click_step_instruction_button)
         $('#send_interrupt_button').click(GdbApi.click_send_interrupt_button)
 
-        window.addEventListener('event_inferior_program_exited', GdbApi.event_inferior_program_exited)
-        window.addEventListener('event_inferior_program_running', GdbApi.event_inferior_program_running)
-        window.addEventListener('event_inferior_program_paused', GdbApi.event_inferior_program_paused)
-        window.addEventListener('event_select_frame', GdbApi.event_select_frame)
-
         const TIMEOUT_MIN = 5
+        /* global io */
         GdbApi.socket = io.connect(`http://${document.domain}:${location.port}/gdb_listener`, {timeout: TIMEOUT_MIN * 60 * 1000});
 
         GdbApi.socket.on('connect', function(){
@@ -84,22 +72,22 @@ const GdbApi = {
     },
     _waiting_for_response_timeout: null,
     click_run_button: function(){
-        window.dispatchEvent(new Event('event_inferior_program_running'))
+        Actions.inferior_program_running()
         GdbApi.run_gdb_command('-exec-run')
     },
     inferior_is_paused: function(){
         return ([undefined, 'paused'].indexOf(store.get('inferior_program')) >= 0)
     },
     click_continue_button: function(){
-        window.dispatchEvent(new Event('event_inferior_program_running'))
+        Actions.inferior_program_running()
         GdbApi.run_gdb_command('-exec-continue')
     },
     click_next_button: function(){
-        window.dispatchEvent(new Event('event_inferior_program_running'))
+        Actions.inferior_program_running()
         GdbApi.run_gdb_command('-exec-next')
     },
     click_step_button: function(){
-        window.dispatchEvent(new Event('event_inferior_program_running'))
+        Actions.inferior_program_running()
         GdbApi.run_gdb_command('-exec-step')
     },
     click_return_button: function(){
@@ -108,18 +96,18 @@ const GdbApi = {
         // That means we do NOT dispatch the event `event_inferior_program_running`, because it's not, in fact, running.
         // The return also doesn't even indicate that it's paused, so we need to manually trigger the event here.
         GdbApi.run_gdb_command('-exec-return')
-        window.dispatchEvent(new Event('event_inferior_program_paused'))
+        Actions.inferior_program_running()
     },
     click_next_instruction_button: function(){
-        window.dispatchEvent(new Event('event_inferior_program_running'))
+        Actions.inferior_program_running()
         GdbApi.run_gdb_command('-exec-next-instruction')
     },
     click_step_instruction_button: function(){
-        window.dispatchEvent(new Event('event_inferior_program_running'))
+        Actions.inferior_program_running()
         GdbApi.run_gdb_command('-exec-step-instruction')
     },
     click_send_interrupt_button: function(){
-        window.dispatchEvent(new Event('event_inferior_program_running'))
+        Actions.inferior_program_running()
         GdbApi.run_gdb_command('-exec-interrupt')
     },
     click_gdb_cmd_button: function(e){
@@ -145,16 +133,11 @@ const GdbApi = {
             console.error('expected cmd or cmd0 [cmd1, cmd2, ...] data attribute(s) on element')
         }
     },
-    event_inferior_program_running: function(){
-        // do nothing
+    select_frame: function(framenum){
+        GdbApi.run_command_and_refresh_state(`-stack-select-frame ${framenum}`)
     },
-    event_inferior_program_paused: function(){
-        GdbApi.refresh_state_for_gdb_pause()
-    },
-    event_select_frame: function(e){
-        let framenum = e.detail
-        GdbApi.run_gdb_command(`-stack-select-frame ${framenum}`)
-        GdbApi.refresh_state_for_gdb_pause()
+    select_thread_id: function(thread_id){
+        GdbApi.run_command_and_refresh_state(`-thread-select ${thread_id}`)
     },
     /**
      * Before sending a command, set a timeout to notify the user that something might be wrong
@@ -260,12 +243,6 @@ const GdbApi = {
         cmds.push('-stack-list-frames')
         return cmds
     },
-    /**
-     * Request relevant store information from gdb to refresh UI
-     */
-    refresh_state_for_gdb_pause: function(){
-        GdbApi.run_gdb_command(GdbApi._get_refresh_state_for_pause_cmds())
-    },
     refresh_breakpoints: function(){
         GdbApi.run_gdb_command([GdbApi.get_break_list_cmd()])
     },
@@ -281,10 +258,10 @@ const GdbApi = {
     },
     get_insert_break_cmd: function(fullname, line){
         if(store.get('interpreter') === 'gdb'){
-            return [`-break-insert ${store.get('rendered_source_file_fullname')}:${line}`]
+            return [`-break-insert ${fullname}:${line}`]
         }else{
             console.log('TODOLLDB - find mi-friendly command')
-            return [`breakpoint set --file ${store.get('rendered_source_file_fullname')} --line ${line}`]
+            return [`breakpoint set --file ${fullname} --line ${line}`]
         }
     },
     get_delete_break_cmd: function(bkpt_num){
@@ -306,7 +283,7 @@ const GdbApi = {
     get_flush_output_cmd: function(){
         if(store.get('language') === 'c_family'){
             if(store.get('interpreter') === 'gdb'){
-                return IGNORE_ERRORS_TOKEN_STR + '-data-evaluate-expression fflush(0)'
+                return constants.IGNORE_ERRORS_TOKEN_STR + '-data-evaluate-expression fflush(0)'
             }else if(store.get('interpreter') === 'lldb'){
                 return ''
             }
@@ -324,209 +301,6 @@ const GdbApi = {
     _error_getting_last_modified_unix_sec(data){
         void(data)
         store.set('inferior_binary_path', null)
-    }
-}
-
-
-/**
- * This is the main callback when receiving a response from gdb.
- * This callback generally updates the store, which emits an event and
- * makes components re-render themselves.
- */
-const process_gdb_response = function(response_array){
-    // update status with error or with last response
-    let update_status = true
-    /**
-     * Determines if response is an error and client does not want to be notified of errors for this particular response.
-     * @param response: gdb mi response object
-     * @return (bool): true if response should be ignored
-     */
-    , ignore = function(response){
-        return response.token === IGNORE_ERRORS_TOKEN_INT && response.message === 'error'
-    }
-
-    for (let r of response_array){
-        // gdb mi output
-        GdbMiOutput.add_mi_output(r)
-
-        if(ignore(r)){
-            continue
-        }
-
-        if (r.type === 'result' && r.message === 'done' && r.payload){
-            // This is special GDB Machine Interface structured data that we
-            // can render in the frontend
-            if ('bkpt' in r.payload){
-                let new_bkpt = r.payload.bkpt
-
-                // remove duplicate breakpoints
-                let cmds = store.get('breakpoints')
-                    .filter(b => (new_bkpt.fullname === b.fullname && new_bkpt.func === b.func && new_bkpt.line === b.line))
-                    .map(b => GdbApi.get_delete_break_cmd(b.number))
-                GdbApi.run_gdb_command(cmds)
-
-                // save this breakpoint
-                let bkpt = Breakpoint.save_breakpoint(r.payload.bkpt)
-
-                // if executable does not have debug symbols (i.e. not compiled with -g flag)
-                // gdb will not return a path, but rather the function name. The function name is
-                // not a file, and therefore it cannot be displayed. Make sure the path is known before
-                // trying to render the file of the newly created breakpoint.
-                if(_.isString(bkpt.fullname_to_display) && bkpt.fullname_to_display.startsWith('/')){
-                    // a normal breakpoint or child breakpoint
-                    store.set('fullname_to_render', bkpt.fullname_to_display)
-                    store.set('current_line_of_source_code', parseInt(bkpt.line))
-                    store.set('make_current_line_visible', true)
-                }
-
-                // refresh all breakpoints
-                GdbApi.refresh_breakpoints()
-            }
-            if ('BreakpointTable' in r.payload){
-                Breakpoint.save_breakpoints(r.payload)
-            }
-            if ('stack' in r.payload) {
-                Threads.update_stack(r.payload.stack)
-            }
-            if('threads' in r.payload){
-                store.set('threads', r.payload.threads)
-                if(store.get('interpreter') === 'gdb'){
-                    store.set('current_thread_id', parseInt(r.payload['current-thread-id']))
-                }else if(store.get('interpreter') === 'lldb'){
-                    // lldb does not provide this
-                }
-            }
-            if ('register-names' in r.payload) {
-                let names = r.payload['register-names']
-                // filter out empty names
-                store.set('register_names', names.filter(name => name !== ''))
-            }
-            if ('register-values' in r.payload) {
-                store.set('previous_register_values', store.get('current_register_values'))
-                store.set('current_register_values', r.payload['register-values'])
-            }
-            if ('asm_insns' in r.payload) {
-                SourceCode.save_new_assembly(r.payload.asm_insns, r.token)
-            }
-            if ('files' in r.payload){
-                if(r.payload.files.length > 0){
-                    let source_file_paths = _.uniq(r.payload.files.map(f => f.fullname)).sort()
-                    store.set('source_file_paths', source_file_paths)
-
-                    let language = 'c_family'
-                    if(source_file_paths.some(p => p.endsWith('.rs'))){
-                        language = 'rust'
-                        let gdb_version_array = store.get('gdb_version_array')
-                        // rust cannot view registers with gdb 7.12.x
-                        if(gdb_version_array[0] == 7 && gdb_version_array[1] == 12){
-                            GdbConsoleComponent.add(`Warning: Due to a bug in gdb version ${store.get('gdb_version')}, gdbgui cannot show register values with rust executables. See https://github.com/cs01/gdbgui/issues/64 for details.`, true)
-                            store.set('can_fetch_register_values', false)
-                        }
-                    }else if (source_file_paths.some(p => p.endsWith('.go'))){
-                        language = 'go'
-                    }
-                    store.set('language', language)
-                }else{
-                    store.set('source_file_paths', ['Executable was compiled without debug symbols. Source file paths are unknown.'])
-
-                    if (store.get('inferior_binary_path')){
-                        Modal.render('Warning',
-                         `This binary was not compiled with debug symbols. Recompile with the -g flag for a better debugging experience.
-                         <p>
-                         <p>
-                         Read more: <a href="http://www.delorie.com/gnu/docs/gdb/gdb_17.html">http://www.delorie.com/gnu/docs/gdb/gdb_17.html</a>`,
-                         '')
-                    }
-                }
-
-            }
-            if ('memory' in r.payload){
-                Memory.add_value_to_cache(r.payload.memory[0].begin, r.payload.memory[0].contents)
-            }
-            // gdb returns local variables as "variables" which is confusing, because you can also create variables
-            // in gdb with '-var-create'. *Those* types of variables are referred to as "expressions" in gdbgui, and
-            // are returned by gdbgui as "changelist", or have the keys "has_more", "numchild", "children", or "name".
-            if ('variables' in r.payload){
-                store.set('locals', r.payload.variables)
-            }
-            // gdbgui expression (aka a gdb variable was changed)
-            if ('changelist' in r.payload){
-                Expressions.handle_changelist(r.payload.changelist)
-            }
-            // gdbgui expression was evaluated for the first time for a child variable
-            if('has_more' in r.payload && 'numchild' in r.payload && 'children' in r.payload){
-                Expressions.gdb_created_children_variables(r)
-            }
-            // gdbgui expression was evaluated for the first time for a root variable
-            if ('name' in r.payload){
-                Expressions.gdb_created_root_variable(r)
-            }
-        } else if (r.type === 'result' && r.message === 'error'){
-            // render it in the status bar, and don't render the last response in the array as it does by default
-            if(update_status){
-                StatusBar.render_from_gdb_mi_response(r)
-                update_status = false
-            }
-
-            // we tried to load a binary, but gdb couldn't find it
-            if(r.payload.msg === `${store.get('inferior_binary_path')}: No such file or directory.`){
-                window.dispatchEvent(new Event('event_inferior_program_exited'))
-            }
-
-        } else if (r.type === 'console'){
-            GdbConsoleComponent.add(r.payload, r.stream === 'stderr')
-            if(store.get('gdb_version') === undefined){
-                // parse gdb version from string such as
-                // GNU gdb (Ubuntu 7.7.1-0ubuntu5~14.04.2) 7.7.1
-                let m = /GNU gdb \(.*\)\s*(.*)\\n/g
-                let a = m.exec(r.payload)
-                if(_.isArray(a) && a.length === 2){
-                    store.set('gdb_version', a[1])
-                    store.set('gdb_version_array', a[1].split('.'))
-                }
-            }
-        }else if (r.type === 'output' || r.type === 'target'){
-            // output of program
-            GdbConsoleComponent.add(r.payload, r.stream === 'stderr')
-        }
-
-        if (r.message && r.message === 'stopped' && r.payload && r.payload.reason){
-            if(r.payload.reason.includes('exited')){
-                window.dispatchEvent(new Event('event_inferior_program_exited'))
-
-            }else if (r.payload.reason.includes('breakpoint-hit') || r.payload.reason.includes('end-stepping-range')){
-                if (r.payload['new-thread-id']){
-                    Threads.set_thread_id(r.payload['new-thread-id'])
-                }
-                window.dispatchEvent(new CustomEvent('event_inferior_program_paused', {'detail': r.payload.frame}))
-
-            }else if (r.payload.reason === 'signal-received'){
-                GdbConsoleComponent.add('gdbgui noticed a signal was recieved. ' +
-                    'If the program exited due to a fault, you can attempt to re-enter the store of the program when the fault ' +
-                    'occurred by clicking the below button.')
-                GdbConsoleComponent.add_no_escape(`<a style="font-family: arial; margin-left: 10px;" class='btn btn-success backtrace'>Re-Enter Program (backtrace)</a>`)
-
-            }else{
-                console.log('TODO handle new reason for stopping. Notify developer of this.')
-                console.log(r)
-            }
-        }
-    }
-
-    // render response of last element of array
-    if(update_status){
-        let last_response = _.last(response_array)
-        if(ignore(last_response)){
-            store.set('status', {text: '', error: false, warning: false})
-        }else{
-            StatusBar.render_from_gdb_mi_response(last_response)
-        }
-    }
-
-    if(response_array.length > 0){
-        // scroll to the bottom
-        GdbMiOutput.scroll_to_bottom()
-        GdbConsoleComponent.scroll_to_bottom()
     }
 }
 

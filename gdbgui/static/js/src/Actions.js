@@ -1,0 +1,49 @@
+import {store} from './store.js';
+import {Expressions} from './Variables.js';
+import GdbApi from './GdbApi.js';
+
+const Actions = {
+    clear_program_state: function(){
+        store.set('line_of_source_to_flash', undefined)
+        store.set('paused_on_frame', undefined)
+        store.set('selected_frame_num', 0)
+        store.set('current_thread_id', undefined)
+        store.set('stack', [])
+        store.set('locals', [])
+        store.set('memory_cache', {})
+
+        // remove local variables, and tell gdb to remove them too
+        let exprs_objs_to_remove = store.get('expressions').filter(obj => obj.expr_type === 'local')
+        exprs_objs_to_remove.map(obj => Expressions.delete_gdb_variable(obj.name))
+    },
+    inferior_program_running: function(){
+        store.set('inferior_program', 'running')
+        Actions.clear_program_state()
+    },
+    inferior_program_paused: function(frame={}){
+        store.set('inferior_program', 'paused')
+        store.set('paused_on_frame', frame)
+        store.set('fullname_to_render', frame.fullname)
+        store.set('make_current_line_visible', true)
+        store.set('line_of_source_to_flash', parseInt(frame.line))
+        store.set('current_assembly_address', frame.addr)
+        Actions.refresh_state_for_gdb_pause()
+    },
+    inferior_program_exited: function(){
+        store.set('inferior_program', 'exited')
+        store.set('disassembly_for_missing_file', [])
+        store.set('root_gdb_tree_var', null)
+        store.set('previous_register_values', {})
+        store.set('current_register_values', {})
+        Actions.clear_program_state()
+    },
+    /**
+     * Request relevant store information from gdb to refresh UI
+     */
+    refresh_state_for_gdb_pause: function(){
+        GdbApi.run_gdb_command(GdbApi._get_refresh_state_for_pause_cmds())
+    }
+
+}
+
+export default Actions

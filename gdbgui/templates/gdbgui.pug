@@ -69,10 +69,10 @@ html
 
             div.flexrow(style="margin-top: 3px;")
                 //- input to jump to a line in the source code
-                input#jump_to_line.form-control.dropdown-input(autocomplete='on', placeholder='jump to line', title='Enter line number, then press enter', style="width: 150px; height: 25px; margin-left: 10")
+                input#jump_to_line.form-control.dropdown-input(autocomplete='on', title='jump to line', placeholder='jump to line', title='Enter line number, then press enter', style="width: 150px; height: 25px; margin-left: 10")
 
                 .btn-group.btn-group(role="group", style='height: 25px; ')
-                    button.btn.btn-default.btn-xs.fetch_assembly_cur_line(type='button', title='fetch disassembly')
+                    button.btn.btn-default.btn-xs#fetch_assembly_cur_line(type='button', title='fetch disassembly')
                         span fetch disassembly
                     button.btn.btn-default.btn-xs#refresh_cached_source_files(type='button', title='fetch disassembly')
                         span reload file/hide disassembly
@@ -81,8 +81,8 @@ html
         #middle
             #middle_left.content(style='height: 100%; float: left;')
                 //- source code
+                #hovervar.hidden todo - display content
                 div#code_container.gdb_content_div(style='overflow: auto; height: 100%;')
-                    #hovervar.hidden todo - display content
                     table#code_table.code
                         tr
                             td(style='font-family: arial; font-style: italic;') Source code will be displayed here

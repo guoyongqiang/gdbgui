@@ -1,6 +1,6 @@
 import {store, Reactor} from './store.js';
 import GdbApi from './GdbApi.js';
-import Memory from './Memory.js';
+import Memory from './Memory.jsx';
 import Util from './Util.js';
 import constants from './constants.js';
 
@@ -560,10 +560,6 @@ const Expressions = {
 const Locals = {
     init: function(){
         new Reactor('#locals', Locals.render)
-
-        window.addEventListener('event_inferior_program_exited', Locals.event_inferior_program_exited)
-        window.addEventListener('event_inferior_program_running', Locals.event_inferior_program_running)
-
         $('body').on('click', '.locals_autocreate_new_expr', Locals.click_locals_autocreate_new_expr)
     },
     render: function(){
@@ -639,7 +635,7 @@ const Locals = {
     clear: function(){
         Locals.clear_autocreated_exprs()
     },
-    event_inferior_program_exited: function(){
+    inferior_program_exited: function(){
         Locals.clear()
     },
     event_inferior_program_running: function(){
