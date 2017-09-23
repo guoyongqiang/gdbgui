@@ -7,20 +7,25 @@ class SourceCodeHeading extends React.Component {
         void(props)
         super()
         this.state = {
-                rendered_source: store._store.rendered_source,
+                fullname_to_render: store._store.fullname_to_render,
+                paused_on_frame: store._store.paused_on_frame,
+                line_of_source_to_flash: store._store.line_of_source_to_flash,
             }
         store.subscribe(this._store_change_callback.bind(this))
     }
     _store_change_callback(){
         this.setState({
-                rendered_source: store._store.rendered_source,
+                fullname_to_render: store._store.fullname_to_render,
+                paused_on_frame: store._store.paused_on_frame,
+                line_of_source_to_flash: store._store.line_of_source_to_flash,
             })
     }
     render(){
+        let line = this.state.paused_on_frame ? this.state.paused_on_frame.line : this.state.line_of_source_to_flash
         return(<FileLink
-            fullname={this.state.rendered_source.fullname}
-            file={this.state.rendered_source.fullname}
-            line={this.state.rendered_source.line} />)
+            fullname={this.state.fullname_to_render}
+            file={this.state.fullname_to_render}
+            line={line} />)
     }
 }
 

@@ -2,6 +2,7 @@ import {store} from './store.js';
 import React from 'react';
 import FileOps from './FileOps.js';
 import Breakpoint from './Breakpoint.jsx';
+import MemoryLink from './MemoryLink.jsx';
 import constants from './constants.js';
 // import GdbApi from './GdbApi.js';
 // import Memory from './Memory.jsx';
@@ -75,11 +76,12 @@ class SourceCode extends React.Component {
         return (
             <tr key={key}>
             <td>
-            {assm.address}
+                <span style={{'whiteSpace': "nowrap"}}>
+                    TODO instruction {assm.opcodes || 'no opcode'} {assm['func-name']}+{assm.offset} <MemoryLink addr={assm.address} />
+                </span>
             </td>
             </tr>
         )
-
     }
 
     is_paused_on_this_line(line_num_being_rendered, gdb_paused_on_line){

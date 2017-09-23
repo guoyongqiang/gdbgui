@@ -15,7 +15,7 @@ const FileOps = {
         let fullname = store.get('fullname_to_render')
         , cached_source_file = FileOps.is_cached(fullname)
         , is_missing = FileOps.is_missing_file(fullname)
-        , is_paused = store.get('inferior_program') !== 'paused'
+        , is_paused = store.get('inferior_program') === 'paused'
         , paused_addr = store.get('current_assembly_address')
 
         // we have file cached
