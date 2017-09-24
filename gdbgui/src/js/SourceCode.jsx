@@ -4,14 +4,11 @@ import FileOps from './FileOps.js';
 import Breakpoint from './Breakpoint.jsx';
 import MemoryLink from './MemoryLink.jsx';
 import constants from './constants.js';
-// import GdbApi from './GdbApi.js';
-// import Memory from './Memory.jsx';
-// import Util from './Util.js';
-// import Modal from './Modal.js';
 
 class SourceCode extends React.Component {
-    constructor(props) {
-        void(props)
+    static el_code_container = $('#code_container')  // todo: no jquery
+
+    constructor() {
         super()
 
         // bind methods
@@ -24,6 +21,7 @@ class SourceCode extends React.Component {
         this.state = this.get_applicable_global_state()
         store.subscribe(this._store_change_callback.bind(this))
     }
+
 
     _store_change_callback(){
         this.setState(this.get_applicable_global_state())
@@ -38,6 +36,7 @@ class SourceCode extends React.Component {
             paused_on_frame: store._store.paused_on_frame,
             breakpoints: store._store.breakpoints,
             source_code_state: store._store.source_code_state,
+            make_current_line_visible: store._store.make_current_line_visible,
         }
     }
     click_gutter(line_num){
@@ -46,10 +45,13 @@ class SourceCode extends React.Component {
     _get_source_line(source, line_should_flash, is_paused_on_this_line, line_num_being_rendered, has_bkpt, has_disabled_bkpt){
         let row_class = ['srccode']
 
+        let id
         if(is_paused_on_this_line){
             row_class.push('paused_on_line')
+            id = 'scroll_to_line'
         }else if(line_should_flash){
             row_class.push('flash')
+            id = ''
         }
 
         let gutter_cls = ''
@@ -58,8 +60,10 @@ class SourceCode extends React.Component {
         }else if (has_disabled_bkpt){
             gutter_cls = 'disabled_breakpoint'
         }
+
+
         return (
-            <tr key={line_num_being_rendered} className={`${row_class.join(' ')}`}>
+            <tr id={id} key={line_num_being_rendered} className={`${row_class.join(' ')}`}>
 
                 <td style={{'verticalAlign': 'top', width: '30px'}} className={'line_num ' + gutter_cls} onClick={()=>{this.click_gutter(line_num_being_rendered)}}>
                     <div>{line_num_being_rendered}</div>
@@ -174,6 +178,55 @@ class SourceCode extends React.Component {
             </table>)
     }
 
+    componentDidUpdate(){
+        if (this.state.source_code_state === constants.source_code_states.SOURCE_CACHED || this.state.source_code_state === constants.source_code_states.ASSM_AND_SOURCE_CACHED){
+            if (this.state.make_current_line_visible){
+                SourceCode.make_current_line_visible()
+            }
+        }
+
+        // this.setState({'make_current_line_visible': false})
+    }
+    static make_current_line_visible(){
+        SourceCode.scroll_to_jq_selector($("#scroll_to_line"))
+    }
+    /**
+     * Scroll to a jQuery selection in the source code table
+     * Used to jump around to various lines
+     */
+    static scroll_to_jq_selector(jq_selector){
+        if (jq_selector.length === 1){  // make sure something is selected before trying to scroll to it
+            let top_of_container = SourceCode.el_code_container.position().top,
+                height_of_container = SourceCode.el_code_container.height(),
+                bottom_of_container = top_of_container + height_of_container,
+                top_of_line = jq_selector.position().top,
+                bottom_of_line = top_of_line+ jq_selector.height(),
+                top_of_table = jq_selector.closest('table').position().top
+
+            if ((top_of_line >= top_of_container) && (bottom_of_line < (bottom_of_container))){
+                // do nothing, it's already in view
+            }else{
+                // line is out of view, scroll so it's in the middle of the table
+                const time_to_scroll = 0
+                let scroll_top = top_of_line - (top_of_table + height_of_container/2)
+                SourceCode.el_code_container.animate({'scrollTop': scroll_top}, time_to_scroll)
+            }
+        }else{
+            // nothing to scroll to
+        }
+    }
+//         void(reactor)
+//         let fullname = store.get('fullname_to_render')
+//         if(fullname && store.get('missing_files').indexOf(fullname) === -1){
+//             SourceCode.render_breakpoints()
+//             SourceCode.highlight_paused_line()
+//             if(store.get('make_current_line_visible')){
+//                 SourceCode.make_current_line_visible()
+//             }
+//         }
+//         store.set('make_current_line_visible', false)
+//         store.set('has_unrendered_assembly', false)
+
     static view_file(fullname, line){
         store.set('fullname_to_render', fullname)
         store.set('line_of_source_to_flash', parseInt(line))
@@ -287,9 +340,6 @@ class SourceCode extends React.Component {
 //                 store.set('warning_shown_for_old_binary', true)
 //             }
 //         }
-//     },
-//     make_current_line_visible: function(){
-//         SourceCode.scroll_to_jq_selector($("#scroll_to_line"))
 //     },
 //     set_theme_in_dom: function(){
 //         let code_container = SourceCode.el_code_container
@@ -454,30 +504,6 @@ class SourceCode extends React.Component {
 //                     $(js_line).addClass('disabled_breakpoint')
 //                 }
 //             }
-//         }
-//     },
-//     /**
-//      * Scroll to a jQuery selection in the source code table
-//      * Used to jump around to various lines
-//      */
-//     scroll_to_jq_selector: function(jq_selector){
-//         if (jq_selector.length === 1){  // make sure something is selected before trying to scroll to it
-//             let top_of_container = SourceCode.el_code_container.position().top,
-//                 height_of_container = SourceCode.el_code_container.height(),
-//                 bottom_of_container = top_of_container + height_of_container,
-//                 top_of_line = jq_selector.position().top,
-//                 bottom_of_line = top_of_line+ jq_selector.height(),
-//                 top_of_table = jq_selector.closest('table').position().top
-
-//             if ((top_of_line >= top_of_container) && (bottom_of_line < (bottom_of_container))){
-//                 // do nothing, it's already in view
-//             }else{
-//                 // line is out of view, scroll so it's in the middle of the table
-//                 const time_to_scroll = 0
-//                 SourceCode.el_code_container.animate({'scrollTop': top_of_line - (top_of_table + height_of_container/2)}, time_to_scroll)
-//             }
-//         }else{
-//             // nothing to scroll to
 //         }
 //     },
 //     /**
