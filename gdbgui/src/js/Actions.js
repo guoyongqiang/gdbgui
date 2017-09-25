@@ -1,6 +1,8 @@
 import {store} from './store.js';
 import {Expressions} from './Variables.js';
 import GdbApi from './GdbApi.js';
+import SourceCode from './SourceCode.jsx';
+import constants from './constants.js';
 
 const Actions = {
     clear_program_state: function(){
@@ -10,6 +12,7 @@ const Actions = {
         store.set('current_thread_id', undefined)
         store.set('stack', [])
         store.set('locals', [])
+        store.set('threads', [])
         store.set('memory_cache', {})
 
         // remove local variables, and tell gdb to remove them too
@@ -17,24 +20,26 @@ const Actions = {
         exprs_objs_to_remove.map(obj => Expressions.delete_gdb_variable(obj.name))
     },
     inferior_program_running: function(){
-        store.set('inferior_program', 'running')
+        store.set('inferior_program', constants.inferior_states.running)
         Actions.clear_program_state()
     },
     inferior_program_paused: function(frame={}){
-        store.set('inferior_program', 'paused')
+        store.set('inferior_program', constants.inferior_states.paused)
         store.set('paused_on_frame', frame)
         store.set('fullname_to_render', frame.fullname)
-        store.set('make_current_line_visible', true)
         store.set('line_of_source_to_flash', parseInt(frame.line))
         store.set('current_assembly_address', frame.addr)
+        SourceCode.make_current_line_visible()
+        // store.set('make_current_line_visible', true)
         Actions.refresh_state_for_gdb_pause()
     },
     inferior_program_exited: function(){
-        store.set('inferior_program', 'exited')
+        store.set('inferior_program', constants.inferior_states.exited)
         store.set('disassembly_for_missing_file', [])
         store.set('root_gdb_tree_var', null)
         store.set('previous_register_values', {})
         store.set('current_register_values', {})
+        store.set('inferior_pid', null)
         Actions.clear_program_state()
     },
     /**

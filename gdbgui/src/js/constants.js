@@ -17,6 +17,13 @@ let constants = {
         ASSM_CACHED: 'ASSM_CACHED',
         FETCHING_ASSM: 'FETCHING_ASSM',
         NONE_AVAILABLE: 'NONE_AVAILABLE',
+    },
+
+    'inferior_states': {
+        'unknown': 'unknown',
+        'running': 'running',
+        'paused': 'paused',
+        'exited': 'exited',
     }
 }
 constants['IGNORE_ERRORS_TOKEN_INT'] = parseInt(constants.IGNORE_ERRORS_TOKEN_STR)

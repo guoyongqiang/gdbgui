@@ -18,15 +18,15 @@ class SourceCode extends React.Component {
         this.click_gutter = this.click_gutter.bind(this)
         this.is_paused_on_this_line = this.is_paused_on_this_line.bind(this)
 
-        this.state = this.get_applicable_global_state()
+        this.state = this._get_applicable_global_state()
         store.subscribe(this._store_change_callback.bind(this))
     }
 
 
     _store_change_callback(){
-        this.setState(this.get_applicable_global_state())
+        this.setState(this._get_applicable_global_state())
     }
-    get_applicable_global_state(){
+    _get_applicable_global_state(){
         return {
             fullname_to_render: store._store.fullname_to_render,
             cached_source_files: store._store.cached_source_files,
@@ -36,7 +36,6 @@ class SourceCode extends React.Component {
             paused_on_frame: store._store.paused_on_frame,
             breakpoints: store._store.breakpoints,
             source_code_state: store._store.source_code_state,
-            make_current_line_visible: store._store.make_current_line_visible,
         }
     }
     click_gutter(line_num){
@@ -178,16 +177,17 @@ class SourceCode extends React.Component {
             </table>)
     }
 
-    componentDidUpdate(){
-        if (this.state.source_code_state === constants.source_code_states.SOURCE_CACHED || this.state.source_code_state === constants.source_code_states.ASSM_AND_SOURCE_CACHED){
-            if (this.state.make_current_line_visible){
-                SourceCode.make_current_line_visible()
-            }
-        }
+    // componentDidUpdate(){
+    //     if (this.state.source_code_state === constants.source_code_states.SOURCE_CACHED || this.state.source_code_state === constants.source_code_states.ASSM_AND_SOURCE_CACHED){
+    //         if (this.state.make_current_line_visible){
+    //             SourceCode.make_current_line_visible()
+    //         }
+    //     }
 
-        // this.setState({'make_current_line_visible': false})
-    }
+    //     // this.setState({'make_current_line_visible': false})
+    // }
     static make_current_line_visible(){
+        console.log('make current line visible!')
         SourceCode.scroll_to_jq_selector($("#scroll_to_line"))
     }
     /**

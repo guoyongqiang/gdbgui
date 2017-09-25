@@ -287,6 +287,13 @@ def gdbgui():
         themes=THEMES)
 
 
+@app.route('/sigint')
+def sigint():
+    pid = int(request.args.get('pid'))
+    os.kill(pid, signal.SIGINT)
+    return jsonify({'message': 'sent signal SIGINT (%s) to process id %s' % (signal.SIGINT, str(pid))})
+
+
 @app.route('/shutdown')
 def shutdown_webview():
     return render_template('donate.pug', debug=json.dumps(app.debug))

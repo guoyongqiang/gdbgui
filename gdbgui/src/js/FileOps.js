@@ -10,12 +10,16 @@ const FileOps = {
         document.getElementById('refresh_cached_source_files').onclick = FileOps.refresh_cached_source_files
     },
     _store_change_callback: function(){
+        if(store.get('inferior_program') === constants.inferior_states.running){
+            return
+        }
+
         const states = constants.source_code_states
 
         let fullname = store.get('fullname_to_render')
         , cached_source_file = FileOps.is_cached(fullname)
         , is_missing = FileOps.is_missing_file(fullname)
-        , is_paused = store.get('inferior_program') === 'paused'
+        , is_paused = store.get('inferior_program') === constants.inferior_states.paused
         , paused_addr = store.get('current_assembly_address')
 
         // we have file cached
@@ -32,7 +36,7 @@ const FileOps = {
         } else if (is_paused && paused_addr && store.get('disassembly_for_missing_file').some(obj => parseInt(obj.address, 16) === parseInt(paused_addr, 16))){
             store.set('source_code_state', states.ASSM_CACHED)
 
-        } else if(is_paused && paused_addr){
+        } else if(is_paused&& paused_addr){
             // get disassembly
             store.set('source_code_state', states.FETCHING_ASSM)
             FileOps.fetch_disassembly_for_missing_file(paused_addr)

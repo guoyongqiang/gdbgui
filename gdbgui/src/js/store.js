@@ -312,13 +312,8 @@ const initial_store_data = {
     refresh_state_after_sending_console_command: true,  // If true, send commands to refresh GUI store after each command is sent from console
     show_all_sent_commands_in_console: debug,  // show all sent commands if in debug mode
 
-    // inferior program store
-    // choices for inferior_program are:
-    // 'running'
-    // 'paused'
-    // 'exited'
-    // undefined
-    inferior_program: undefined,
+    inferior_program: constants.inferior_states.unknown,
+    inferior_pid: null,
 
     paused_on_frame: undefined,
     selected_frame_num: 0,

@@ -173,6 +173,11 @@ const process_gdb_response = function(response_array){
         }else if (r.type === 'output' || r.type === 'target'){
             // output of program
             GdbConsoleComponent.add(r.payload, r.stream === 'stderr')
+        } else if (r.type === 'notify'){
+            if(r.message === "thread-group-started"){
+                store.set('inferior_pid', parseInt(r.payload.pid))
+            }
+
         }
 
         if (r.message && r.message === 'stopped' && r.payload && r.payload.reason){

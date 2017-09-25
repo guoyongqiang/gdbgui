@@ -76,7 +76,7 @@ const GdbApi = {
         GdbApi.run_gdb_command('-exec-run')
     },
     inferior_is_paused: function(){
-        return ([undefined, 'paused'].indexOf(store.get('inferior_program')) >= 0)
+        return ([constants.inferior_states.unknown, constants.inferior_states.paused].indexOf(store.get('inferior_program')) !== -1)
     },
     click_continue_button: function(){
         Actions.inferior_program_running()
