@@ -1,7 +1,7 @@
 import {store} from './store.js';
 import React from 'react';
 import FileOps from './FileOps.js';
-import Breakpoint from './Breakpoint.jsx';
+import Breakpoints from './Breakpoints.jsx';
 import MemoryLink from './MemoryLink.jsx';
 import constants from './constants.js';
 
@@ -39,7 +39,7 @@ class SourceCode extends React.Component {
         }
     }
     click_gutter(line_num){
-        Breakpoint.toggle_breakpoint(this.state.fullname_to_render, line_num)
+        Breakpoints.add_or_remove_breakpoint(this.state.fullname_to_render, line_num)
     }
     _get_source_line(source, line_should_flash, is_paused_on_this_line, line_num_being_rendered, has_bkpt, has_disabled_bkpt){
         let row_class = ['srccode']
@@ -99,8 +99,8 @@ class SourceCode extends React.Component {
     get_body_source_only(source_code){
         let body = []
 
-        let bkpt_lines = Breakpoint.get_breakpoint_lines_for_file(this.state.fullname_to_render)
-        , disabled_breakpoint_lines = Breakpoint.get_disabled_breakpoint_lines_for_file(this.state.fullname_to_render)
+        let bkpt_lines = Breakpoints.get_breakpoint_lines_for_file(this.state.fullname_to_render)
+        , disabled_breakpoint_lines = Breakpoints.get_disabled_breakpoint_lines_for_file(this.state.fullname_to_render)
 
         let gdb_paused_on_line = this.state.paused_on_frame ? parseInt(this.state.paused_on_frame.line) : 0
         for (let i = 0; i < source_code.length; i++){
@@ -177,15 +177,14 @@ class SourceCode extends React.Component {
             </table>)
     }
 
-    // componentDidUpdate(){
-    //     if (this.state.source_code_state === constants.source_code_states.SOURCE_CACHED || this.state.source_code_state === constants.source_code_states.ASSM_AND_SOURCE_CACHED){
-    //         if (this.state.make_current_line_visible){
-    //             SourceCode.make_current_line_visible()
-    //         }
-    //     }
-
-    //     // this.setState({'make_current_line_visible': false})
-    // }
+    componentDidUpdate(){
+        if (this.state.source_code_state === constants.source_code_states.SOURCE_CACHED || this.state.source_code_state === constants.source_code_states.ASSM_AND_SOURCE_CACHED){
+            if (this.state.make_current_line_visible){
+                SourceCode.make_current_line_visible()
+            }
+        }
+        store.set('make_current_line_visible', false)
+    }
     static make_current_line_visible(){
         console.log('make current line visible!')
         SourceCode.scroll_to_jq_selector($("#scroll_to_line"))
@@ -215,17 +214,6 @@ class SourceCode extends React.Component {
             // nothing to scroll to
         }
     }
-//         void(reactor)
-//         let fullname = store.get('fullname_to_render')
-//         if(fullname && store.get('missing_files').indexOf(fullname) === -1){
-//             SourceCode.render_breakpoints()
-//             SourceCode.highlight_paused_line()
-//             if(store.get('make_current_line_visible')){
-//                 SourceCode.make_current_line_visible()
-//             }
-//         }
-//         store.set('make_current_line_visible', false)
-//         store.set('has_unrendered_assembly', false)
 
     static view_file(fullname, line){
         store.set('fullname_to_render', fullname)
@@ -276,7 +264,7 @@ class SourceCode extends React.Component {
 //         let line = e.currentTarget.dataset.line
 //         if(e.currentTarget.classList.contains('breakpoint') || e.currentTarget.classList.contains('breakpoint_disabled')){
 //             // clicked gutter with a breakpoint, remove it
-//             Breakpoint.remove_breakpoint_if_present(store.get('rendered_source_file_fullname'), line)
+//             Breakpoints.remove_breakpoint_if_present(store.get('rendered_source_file_fullname'), line)
 
 //         }else{
 //             // clicked with no breakpoint, add it, and list all breakpoints to make sure breakpoint table is up to date
@@ -488,8 +476,8 @@ class SourceCode extends React.Component {
 //         document.querySelectorAll('.line_num.disabled_breakpoint').forEach(el => el.classList.remove('disabled_breakpoint'))
 //         if(_.isString(store.get('rendered_source_file_fullname'))){
 
-//             let bkpt_lines = Breakpoint.get_breakpoint_lines_for_file(store.get('rendered_source_file_fullname'))
-//             , disabled_breakpoint_lines = Breakpoint.get_disabled_breakpoint_lines_for_file(store.get('rendered_source_file_fullname'))
+//             let bkpt_lines = Breakpoints.get_breakpoint_lines_for_file(store.get('rendered_source_file_fullname'))
+//             , disabled_breakpoint_lines = Breakpoints.get_disabled_breakpoint_lines_for_file(store.get('rendered_source_file_fullname'))
 
 //             for(let bkpt_line of bkpt_lines){
 //                 let js_line = $(`td.line_num[data-line=${bkpt_line}]`)[0]

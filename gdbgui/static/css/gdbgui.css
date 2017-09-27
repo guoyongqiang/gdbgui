@@ -97,16 +97,17 @@ td{
 }
 div.breakpoint{
     border: solid;
+    cursor: pointer;
     /* need top and bottom border so when hovering and showing border on row, there is no "jumping" */
     border-width: 0px;
-    border-top-width: 5px;
+    border-top-width: 1px;
     border-right-width: 1px;
     border-bottom-width: 1px;
     border-color: #f5f5f5; /* make border color the same as the background color */
 }
 .breakpoint td{
-    padding-top: 2px !important;
-    padding-bottom: 2px !important;
+    padding-top: 1px !important;
+    padding-bottom: 1px !important;
 }
 .breakpoint:hover{
     background-color: #f5f5f5;

@@ -1,6 +1,6 @@
 import {store} from './store.js';
 import GdbMiOutput from './GdbMiOutput.js';
-import Breakpoint from './Breakpoint.jsx';
+import Breakpoints from './Breakpoints.jsx';
 import constants from './constants.js';
 import Threads from './Threads.jsx';
 import FileOps from './FileOps.js';
@@ -51,7 +51,7 @@ const process_gdb_response = function(response_array){
                 GdbApi.run_gdb_command(cmds)
 
                 // save this breakpoint
-                let bkpt = Breakpoint.save_breakpoint(r.payload.bkpt)
+                let bkpt = Breakpoints.save_breakpoint(r.payload.bkpt)
 
                 // if executable does not have debug symbols (i.e. not compiled with -g flag)
                 // gdb will not return a path, but rather the function name. The function name is
@@ -68,7 +68,7 @@ const process_gdb_response = function(response_array){
                 GdbApi.refresh_breakpoints()
             }
             if ('BreakpointTable' in r.payload){
-                Breakpoint.save_breakpoints(r.payload)
+                Breakpoints.save_breakpoints(r.payload)
             }
             if ('stack' in r.payload) {
                 Threads.update_stack(r.payload.stack)

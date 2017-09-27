@@ -30,7 +30,6 @@ const Actions = {
         store.set('line_of_source_to_flash', parseInt(frame.line))
         store.set('current_assembly_address', frame.addr)
         SourceCode.make_current_line_visible()
-        // store.set('make_current_line_visible', true)
         Actions.refresh_state_for_gdb_pause()
     },
     inferior_program_exited: function(){

@@ -74,7 +74,7 @@ class Threads extends React.Component {
 
     static get_thread_header(thread, is_current_thread_being_rendered){
         // add thread name
-        let onclick = ''
+        let onclick = null
         , cls = ''
         if(is_current_thread_being_rendered){
             cls = 'bold'

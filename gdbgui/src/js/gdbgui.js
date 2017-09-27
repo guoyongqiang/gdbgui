@@ -20,7 +20,7 @@ import SourceCode from './SourceCode.jsx';
 import SourceCodeHeading from './SourceCodeHeading.jsx';
 import SourceFileAutocomplete from './SourceFileAutocomplete.js';
 import FileOps from './FileOps.js';
-import Breakpoint from './Breakpoint.jsx';
+import Breakpoints from './Breakpoints.jsx';
 import Tree from './Tree.js';
 import Registers from './Registers.js';
 import GdbMiOutput from './GdbMiOutput.js';
@@ -120,6 +120,7 @@ Split(['#middle', '#bottom'], {
 void(React)  // ReactDOM secretly depends on React; avoid "'React' is defined but never used  no-unused-vars"
 ReactDOM.render(<StatusBar/>, document.getElementById('status'))
 ReactDOM.render(<Threads/>, document.getElementById('threads'))
+ReactDOM.render(<Breakpoints/>, document.getElementById('breakpoints'))
 ReactDOM.render(<SourceCodeHeading/>, document.getElementById('source_code_heading'))
 ReactDOM.render(<SourceCode/>, document.getElementById('code_container'))
 ReactDOM.render(<SigintButton/>, document.getElementById('small_buttons'))
@@ -131,7 +132,6 @@ GdbCommandInput.init()
 Modal.init()
 GdbConsoleComponent.init()
 GdbMiOutput.init()
-Breakpoint.init()
 BinaryLoader.init()
 Registers.init()
 SourceFileAutocomplete.init()
