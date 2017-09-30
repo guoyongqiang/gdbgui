@@ -336,6 +336,7 @@ const initial_store_data = {
     disassembly_for_missing_file: [],  // mi response object. Only fetched when there currently paused frame refers to a file that doesn't exist or is undefined
     missing_files: [],  // files that were attempted to be fetched but did not exist on the local filesystem
     source_code_state: constants.source_code_states.NONE_AVAILABLE,
+    render_paused_frame_or_user_selection: 'paused_frame',  // 'paused_frame' or 'user_selection'
 
     // binary selection
     inferior_binary_path: null,

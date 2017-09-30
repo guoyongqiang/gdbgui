@@ -11,6 +11,7 @@ import GdbConsoleComponent from './GdbConsole.js';
 import {Expressions} from './Variables.js';
 import Modal from './Modal.js';
 import Actions from './Actions.js';
+import SourceCode from './SourceCode.jsx';
 
 
 /**
@@ -59,9 +60,7 @@ const process_gdb_response = function(response_array){
                 // trying to render the file of the newly created breakpoint.
                 if(_.isString(bkpt.fullname_to_display) && bkpt.fullname_to_display.startsWith('/')){
                     // a normal breakpoint or child breakpoint
-                    store.set('fullname_to_render', bkpt.fullname_to_display)
-                    store.set('line_of_source_to_flash', parseInt(bkpt.line))
-                    store.set('make_current_line_visible', true)
+                    SourceCode.view_file(bkpt.fullname_to_display, parseInt(bkpt.line))
                 }
 
                 // refresh all breakpoints

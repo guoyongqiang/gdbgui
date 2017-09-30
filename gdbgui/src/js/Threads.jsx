@@ -1,9 +1,10 @@
 import React from 'react';
-import {ReactTable} from './ReactTable.jsx';
+import ReactTable from './ReactTable.jsx';
 import {store} from './store.js';
 import GdbApi from './GdbApi.js';
 import Memory from './Memory.jsx';
-import {FileLink, MemoryLink} from './Links.jsx';
+import {FileLink} from './Links.jsx';
+import MemoryLink from './MemoryLink.jsx';
 
 
 class FrameArguments extends React.Component {
@@ -44,7 +45,9 @@ class Threads extends React.Component {
     }
 
     render(){
-        if(this.state.threads.length <= 0) return <span className='placeholder'>not paused</span>
+        if(this.state.threads.length <= 0){
+            return <span className='placeholder'>not paused</span>
+        }
 
         let content = [];
 

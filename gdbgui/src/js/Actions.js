@@ -25,6 +25,7 @@ const Actions = {
     },
     inferior_program_paused: function(frame={}){
         store.set('inferior_program', constants.inferior_states.paused)
+        store.set('render_paused_frame_or_user_selection', 'paused_frame')
         store.set('paused_on_frame', frame)
         store.set('fullname_to_render', frame.fullname)
         store.set('line_of_source_to_flash', parseInt(frame.line))

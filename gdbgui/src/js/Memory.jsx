@@ -2,7 +2,7 @@ import {store, Reactor} from './store.js';
 import GdbApi from './GdbApi.js';
 import Util from './Util.js';
 import constants from './constants.js'
-import {MemoryLink} from './Links.jsx'
+import MemoryLink from './MemoryLink.jsx';
 import React from 'react';
 
 /**

@@ -10,22 +10,41 @@ const FileOps = {
         document.getElementById('refresh_cached_source_files').onclick = FileOps.refresh_cached_source_files
     },
     _store_change_callback: function(){
+        // TODO state of inferior after backtrace remains running, so source isn't displayed. Need to fix this.
         if(store.get('inferior_program') === constants.inferior_states.running){
             return
         }
 
         const states = constants.source_code_states
+        let paused_frame_or_user_selection = store.get('render_paused_frame_or_user_selection')
 
-        let fullname = store.get('fullname_to_render')
-        , cached_source_file = FileOps.is_cached(fullname)
-        , is_missing = FileOps.is_missing_file(fullname)
-        , is_paused = store.get('inferior_program') === constants.inferior_states.paused
-        , paused_addr = store.get('current_assembly_address')
+        let fullname = null
+        , is_paused = false
+        , paused_addr = null
 
-        // we have file cached
-        // TODO test for constants.ASSM_AND_SOURCE_CACHED
-        if(fullname && cached_source_file){
-            // do nothing
+        if (paused_frame_or_user_selection === 'user_selection'){
+            fullname = store.get('fullname_to_render')
+            is_missing = FileOps.is_missing_file(fullname)
+            is_paused = false
+            paused_addr = null
+        }else {  // paused_frame_or_user_selection === 'paused_frame'){
+            is_paused = store.get('inferior_program') === constants.inferior_states.paused
+            paused_addr = store.get('current_assembly_address')
+            let paused_frame = store.get('paused_on_frame')
+            if(paused_frame){
+                fullname = paused_frame.fullname
+            }
+        }
+
+        let is_missing = FileOps.is_missing_file(fullname)
+        , source_file_obj = FileOps.get_source_file_obj_from_cache(fullname)
+
+        if(fullname && source_file_obj && Object.keys(source_file_obj.assembly).length){
+            // we have file and assembly cached
+            store.set('source_code_state', states.ASSM_AND_SOURCE_CACHED)
+
+        }else if(fullname && source_file_obj){
+            // we have file cached
             store.set('source_code_state', states.SOURCE_CACHED)
 
         }else if (fullname && !is_missing ){
@@ -36,7 +55,7 @@ const FileOps = {
         } else if (is_paused && paused_addr && store.get('disassembly_for_missing_file').some(obj => parseInt(obj.address, 16) === parseInt(paused_addr, 16))){
             store.set('source_code_state', states.ASSM_CACHED)
 
-        } else if(is_paused&& paused_addr){
+        } else if(is_paused && paused_addr){
             // get disassembly
             store.set('source_code_state', states.FETCHING_ASSM)
             FileOps.fetch_disassembly_for_missing_file(paused_addr)
@@ -76,10 +95,8 @@ const FileOps = {
     },
     refresh_cached_source_files: function(){
         FileOps.clear_cached_source_files()
-        // TODO fetch current file
     },
     clear_cached_source_files: function(){
-        store.set('rendered_source_file_fullname', null)
         store.set('cached_source_files', [])
     },
     is_cached: function(fullname){

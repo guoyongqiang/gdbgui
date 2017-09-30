@@ -48,21 +48,19 @@ class ReactTable extends React.Component{
     render(){
         let classes = ['table', 'table-condensed'].concat(this.props.classes)
         return (
-        <table
-            className={classes.join(' ') }
-            style={this.props.style}>
-            <thead>
-                <tr>
-                     {this.render_head()}
-                 </tr>
-        </thead>
-        <tbody>
-                {this.props.data.map(this.render_row)}
-        </tbody>
-        </table>)
+            <table
+                className={classes.join(' ') }
+                style={this.props.style}>
+                <thead>
+                    <tr>
+                         {this.render_head()}
+                     </tr>
+            </thead>
+            <tbody>
+                    {this.props.data.map(this.render_row)}
+            </tbody>
+            </table>)
     }
 }
 
-module.exports ={
-    ReactTable: ReactTable
-}
+export default ReactTable

@@ -11,6 +11,12 @@ class SourceCode extends React.Component {
     constructor() {
         super()
 
+        document.getElementById('jump_to_line').onkeyup = (e)=>{
+            if (e.keyCode === constants.ENTER_BUTTON_NUM){
+                SourceCode.view_line(e.currentTarget.value)
+            }
+        }
+
         // bind methods
         this.get_body_assembly_only = this.get_body_assembly_only.bind(this)
         this._get_source_line = this._get_source_line.bind(this)
@@ -21,7 +27,6 @@ class SourceCode extends React.Component {
         this.state = this._get_applicable_global_state()
         store.subscribe(this._store_change_callback.bind(this))
     }
-
 
     _store_change_callback(){
         this.setState(this._get_applicable_global_state())
@@ -36,6 +41,7 @@ class SourceCode extends React.Component {
             paused_on_frame: store._store.paused_on_frame,
             breakpoints: store._store.breakpoints,
             source_code_state: store._store.source_code_state,
+            make_current_line_visible: store._store.make_current_line_visible,
         }
     }
     click_gutter(line_num){
@@ -44,13 +50,16 @@ class SourceCode extends React.Component {
     _get_source_line(source, line_should_flash, is_paused_on_this_line, line_num_being_rendered, has_bkpt, has_disabled_bkpt){
         let row_class = ['srccode']
 
-        let id
         if(is_paused_on_this_line){
             row_class.push('paused_on_line')
-            id = 'scroll_to_line'
         }else if(line_should_flash){
             row_class.push('flash')
-            id = ''
+        }
+
+        let id = ''
+        if(is_paused_on_this_line && this.state.render_paused_frame_or_user_selection === 'paused_frame' ||
+            line_should_flash){
+            id = 'scroll_to_line'
         }
 
         let gutter_cls = ''
@@ -75,12 +84,12 @@ class SourceCode extends React.Component {
             </tr>)
     }
 
-    _get_assm_line(key, assm){
+    _get_assm_line(key, assm, paused_addr){
         return (
-            <tr key={key}>
-            <td>
-                <span style={{'whiteSpace': "nowrap"}}>
-                    TODO instruction {assm.opcodes || 'no opcode'} {assm['func-name']}+{assm.offset} <MemoryLink addr={assm.address} />
+            <tr key={key} className='loc'>
+            <td  className='loc'>
+                <span style={{'whiteSpace': "nowrap"}} className={paused_addr === assm.address ? 'current_assembly_command flash' : ''}>
+                    {assm.inst} {assm['func-name']}+{assm.offset} <MemoryLink addr={assm.address} />
                 </span>
             </td>
             </tr>
@@ -125,10 +134,11 @@ class SourceCode extends React.Component {
 
     get_body_assembly_only(){
         let assm_array = this.state.disassembly_for_missing_file
-        let body = []
-        let i = 0
+        , paused_addr = this.state.paused_on_frame ? this.state.paused_on_frame.addr : null
+        , body = []
+        , i = 0
         for(let assm of assm_array){
-            body.push(this._get_assm_line(i, assm))
+            body.push(this._get_assm_line(i, assm, paused_addr))
             i++
         }
         return body
@@ -186,7 +196,6 @@ class SourceCode extends React.Component {
         store.set('make_current_line_visible', false)
     }
     static make_current_line_visible(){
-        console.log('make current line visible!')
         SourceCode.scroll_to_jq_selector($("#scroll_to_line"))
     }
     /**
@@ -216,26 +225,14 @@ class SourceCode extends React.Component {
     }
 
     static view_file(fullname, line){
+        store.set('render_paused_frame_or_user_selection', 'user_selection')
         store.set('fullname_to_render', fullname)
+        SourceCode.view_line(line)
+    }
+
+    static view_line(line){
         store.set('line_of_source_to_flash', parseInt(line))
         store.set('make_current_line_visible', true)
-    }
-    // get_render_state(){
-    //     if (FileOps.is_cached(this.state.fullname_to_render)){
-    //         return 'SOURCE'
-    //     }
-
-    //     let paused_addr = this.state.paused_on_frame ? this.state.paused_on_frame.addr : null
-    //     if (this.state.disassembly_for_missing_file.some(obj => obj.address === paused_addr)){
-    //         return 'ASSM'
-    //     }
-
-    //     return 'EMPTY'
-    // }
-
-    // TODO deprecate
-    static get_attrs_to_view_file(fullname, line=0){
-        return `class='view_file pointer' data-fullname=${fullname} data-line=${line}`
     }
 
 }
@@ -563,9 +560,6 @@ class SourceCode extends React.Component {
 //             store.set('line_of_source_to_flash', line)
 //             store.set('make_current_line_visible', true)
 //         }
-//     },
-//     get_attrs_to_view_file: function(fullname, line=0){
-//         return `class='view_file pointer' data-fullname=${fullname} data-line=${line}`
 //     },
 // }
 
