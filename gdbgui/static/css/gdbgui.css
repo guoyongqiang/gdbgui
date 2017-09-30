@@ -152,7 +152,8 @@ div.breakpoint:hover a span.breakpoint_trashcan, .variable:hover .right_help_ico
     background: #ffd6d7 !important;
 }
 td.assembly{
-    padding-bottom: 6px;
+    padding-bottom: 0px;
+    padding-top: 0px;
     white-space: nowrap;
 }
 #code_table{
@@ -162,6 +163,8 @@ td.assembly{
 }
 .srccode td{
     padding-left: 3px;
+    padding-bottom: 0px;
+    padding-top: 0px;
     border-style: solid;
     border-top-width: 1px;
     border-right-width: 1px;
@@ -196,10 +199,10 @@ td.line_num{
 }
 .paused_on_line {
     border-style: solid;
-    border-top-width: 1px;
-    border-bottom-width: 1px;
+    border-top-width: 0px;
+    border-bottom-width: 0px;
     border-left-width: 0px;
-    border-right-width: 1px;
+    border-right-width: 0px;
 }
 .dropdown-btn {
         vertical-align: top;

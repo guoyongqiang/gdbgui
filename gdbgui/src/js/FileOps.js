@@ -4,6 +4,8 @@ import GdbApi from './GdbApi.js';
 import constants from './constants.js';
 
 const FileOps = {
+    unfetchable_disassembly_addresses: {},
+    disassembly_addr_being_fetched: null,
     init: function(){
         store.subscribe(FileOps._store_change_callback)
         document.getElementById('fetch_assembly_cur_line').onclick = FileOps.fetch_assembly_cur_line
@@ -17,12 +19,18 @@ const FileOps = {
 
         const states = constants.source_code_states
         let paused_frame_or_user_selection = store.get('render_paused_frame_or_user_selection')
-
-        let fullname = null
+        , rendering_user_selection = paused_frame_or_user_selection === 'user_selection'
+        , fullname = null
         , is_paused = false
         , paused_addr = null
+        , paused_frame_fullname = null
 
-        if (paused_frame_or_user_selection === 'user_selection'){
+        let paused_frame = store.get('paused_on_frame')
+        if(paused_frame){
+            paused_frame_fullname = paused_frame.fullname
+        }
+
+        if (rendering_user_selection){
             fullname = store.get('fullname_to_render')
             is_missing = FileOps.is_missing_file(fullname)
             is_paused = false
@@ -30,10 +38,7 @@ const FileOps = {
         }else {  // paused_frame_or_user_selection === 'paused_frame'){
             is_paused = store.get('inferior_program') === constants.inferior_states.paused
             paused_addr = store.get('current_assembly_address')
-            let paused_frame = store.get('paused_on_frame')
-            if(paused_frame){
-                fullname = paused_frame.fullname
-            }
+            fullname = paused_frame_fullname
         }
 
         let is_missing = FileOps.is_missing_file(fullname)
@@ -56,9 +61,14 @@ const FileOps = {
             store.set('source_code_state', states.ASSM_CACHED)
 
         } else if(is_paused && paused_addr){
-            // get disassembly
-            store.set('source_code_state', states.FETCHING_ASSM)
-            FileOps.fetch_disassembly_for_missing_file(paused_addr)
+            if(paused_addr in FileOps.unfetchable_disassembly_addresses){
+                store.set('source_code_state', states.ASSM_UNAVAILABLE)
+
+            }else{
+                // get disassembly
+                store.set('source_code_state', states.FETCHING_ASSM)
+                FileOps.fetch_disassembly_for_missing_file(paused_addr)
+            }
 
         } else {
             store.set('source_code_state', states.NONE_AVAILABLE)
@@ -228,7 +238,14 @@ const FileOps = {
 
         let start = parseInt(hex_addr, 16)
         , end = start + 100
+        FileOps.disassembly_addr_being_fetched = hex_addr
         GdbApi.run_gdb_command(constants.DISASSEMBLY_FOR_MISSING_FILE_STR + `-data-disassemble -s 0x${start.toString((16))} -e 0x${end.toString((16))} -- 0`)
+
+    },
+    fetch_disassembly_for_missing_file_failed: function(){
+        let addr_being_fetched = FileOps.disassembly_addr_being_fetched
+        FileOps.unfetchable_disassembly_addresses[addr_being_fetched] = true
+        FileOps.disassembly_addr_being_fetched = null
     },
     /**
      * Save assembly and render source code if desired
@@ -237,6 +254,8 @@ const FileOps = {
      *  constants.DISASSEMBLY_FOR_MISSING_FILE_INT when source file is undefined or does not exist on filesystem
      */
     save_new_assembly: function(mi_assembly, mi_token){
+        FileOps.disassembly_addr_being_fetched = null
+
         if(!_.isArray(mi_assembly) || mi_assembly.length === 0){
             console.error('Attempted to save unexpected assembly', mi_assembly)
         }

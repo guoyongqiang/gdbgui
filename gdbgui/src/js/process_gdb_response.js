@@ -35,8 +35,12 @@ const process_gdb_response = function(response_array){
         // gdb mi output
         GdbMiOutput.add_mi_output(r)
 
-        if(ignore(r)){
-            continue
+        if(r.message === 'error'){
+            if (r.token === constants.IGNORE_ERRORS_TOKEN_INT){
+                continue
+            }else if (r.token === constants.DISASSEMBLY_FOR_MISSING_FILE_INT){
+                FileOps.fetch_disassembly_for_missing_file_failed()
+            }
         }
 
         if (r.type === 'result' && r.message === 'done' && r.payload){
