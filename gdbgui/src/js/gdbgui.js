@@ -31,7 +31,7 @@ import GdbCommandInput from './GdbCommandInput.js';
 import {Expressions, Locals, HoverVar} from './Variables.js';
 import GdbConsoleComponent from './GdbConsole.js';
 import Memory from './Memory.jsx';
-import SigintButton from './SigintButton.jsx';
+import InferiorProgramInfo from './InferiorProgramInfo.jsx';
 
  /* global Split */
  /* global debug */
@@ -123,7 +123,7 @@ ReactDOM.render(<Threads/>, document.getElementById('threads'))
 ReactDOM.render(<Breakpoints/>, document.getElementById('breakpoints'))
 ReactDOM.render(<SourceCodeHeading/>, document.getElementById('source_code_heading'))
 ReactDOM.render(<SourceCode/>, document.getElementById('code_container'))
-ReactDOM.render(<SigintButton/>, document.getElementById('small_buttons'))
+ReactDOM.render(<InferiorProgramInfo/>, document.getElementById('inferior_program_info'))
 // TODO make all these into react components
 // TODO remove jquery dependency
 GlobalEvents.init()

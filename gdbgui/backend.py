@@ -51,6 +51,12 @@ if match is not None and int(match.groups()[0]) >= 16:
     # os's security requirements
     STARTUP_WITH_SHELL_OFF = True
 
+
+SIGNAL_NAME_TO_NUM = {}
+for n in dir(signal):
+    if n.startswith('SIG') and '_' not in n:
+        SIGNAL_NAME_TO_NUM[n.upper()] = getattr(signal, n)
+
 # Create flask application and add some configuration keys to be used in various callbacks
 app = Flask(__name__, template_folder=TEMPLATE_DIR, static_folder=STATIC_DIR)
 # templates are written in pug, so add that capability to flask
@@ -287,11 +293,16 @@ def gdbgui():
         themes=THEMES)
 
 
-@app.route('/sigint')
-def sigint():
+@app.route('/send_signal_to_pid')
+def send_signal_to_pid():
+    signal_name = request.args.get('signal_name', '')
+    signal_num = SIGNAL_NAME_TO_NUM.get(signal_name.upper())
+    if signal is None:
+        raise ValueError('no such signal %s' % signal_name)
+
     pid = int(request.args.get('pid'))
-    os.kill(pid, signal.SIGINT)
-    return jsonify({'message': 'sent signal SIGINT (%s) to process id %s' % (signal.SIGINT, str(pid))})
+    os.kill(pid, signal_num)
+    return jsonify({'message': 'sent signal %s (%s) to process id %s' % (signal_name, signal_num, str(pid))})
 
 
 @app.route('/shutdown')

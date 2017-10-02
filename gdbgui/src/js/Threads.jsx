@@ -46,7 +46,7 @@ class Threads extends React.Component {
 
     render(){
         if(this.state.threads.length <= 0){
-            return <span className='placeholder'>not paused</span>
+            return <span className='placeholder'></span>
         }
 
         let content = [];
