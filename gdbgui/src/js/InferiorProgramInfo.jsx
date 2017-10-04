@@ -1,29 +1,32 @@
 import React from 'react'
-import Actions from './Actions.js'
 import {store} from './store.js'
 
 class InferiorProgramInfo extends React.Component {
 
     constructor() {
         super()
-        this.state = {inferior_pid: store._store.inferior_pid}
+        this.send_signal = this.send_signal.bind(this)
+        this.get_choice = this.get_choice.bind(this)
+        this.state = {inferior_pid: store._store.inferior_pid,
+            selected_signal: 'SIGINT'}
         store.subscribe(this._store_change_callback.bind(this))
     }
 
     _store_change_callback(){
-        this.setState({inferior_pid: store._store.inferior_pid})
+        this.setState({inferior_pid: store._store.inferior_pid,})
     }
 
-    static send_signal(signal_name, pid){
+    send_signal(){
+        let signal_name = this.state.selected_signal
+        , pid = this.state.inferior_pid
+
         $.ajax({
             url: "/send_signal_to_pid",
             cache: false,
             type: 'GET',
             data: {signal_name: signal_name, pid: pid},
             success: function(response){
-                console.log(response)
                 store.set('status', {text: response.message, error: false, warning: false})
-                Actions.refresh_state_for_gdb_pause()
             },
             error: function(response){
                 if (response.responseJSON && response.responseJSON.message){
@@ -37,71 +40,53 @@ class InferiorProgramInfo extends React.Component {
             }
         })
     }
-            // TODO add all these
-            // {'sigabrt': 6,
-            //  'sigalrm': 14,
-            //  'sigbus': 7,
-            //  'sigchld': 17,
-            //  'sigcld': 17,
-            //  'sigcont': 18,
-            //  'sigfpe': 8,
-            //  'sighup': 1,
-            //  'sigill': 4,
-            //  'sigint': 2,
-            //  'sigio': 29,
-            //  'sigiot': 6,
-            //  'sigkill': 9,
-            //  'sigpipe': 13,
-            //  'sigpoll': 29,
-            //  'sigprof': 27,
-            //  'sigpwr': 30,
-            //  'sigquit': 3,
-            //  'sigrtmax': 64,
-            //  'sigrtmin': 34,
-            //  'sigsegv': 11,
-            //  'sigstop': 19,
-            //  'sigsys': 31,
-            //  'sigterm': 15,
-            //  'sigtrap': 5,
-            //  'sigtstp': 20,
-            //  'sigttin': 21,
-            //  'sigttou': 22,
-            //  'sigurg': 23,
-            //  'sigusr1': 10,
-            //  'sigusr2': 12,
-            //  'sigvtalrm': 26,
-            //  'sigwinch': 28,
-            //  'sigxcpu': 24,
-            //  'sigxfsz': 25}
+
+    get_choice(s){
+        let onclick = function(){
+                        this.setState({'selected_signal': s})
+                    }.bind(this)
+
+        return <li key={s} className='pointer' value={s} onClick={onclick}>
+                    <a >{`${s} (${this.props.signals[s]})`}</a>
+                </li>
+    }
+
     render(){
 
         if(this.state.inferior_pid){
+                let signals = []
+                for(let s in this.props.signals){
+                    if(s === 'SIGKILL' || s === 'SIGINT'){
+                        signals.push(this.get_choice(s))
+                    }
+                }
+                for(let s in this.props.signals){
+                    if(s !== 'SIGKILL' && s !== 'SIGINT'){
+                        signals.push(this.get_choice(s))
+                    }
+                }
                 return(
                     <div>
                         <span>inferior program: PID {this.state.inferior_pid}</span>
-                        <br/>
-                        <span>send to inferior </span>
+                        <div className="dropdown btn-group">
 
-                        <select id="signal_selection" onChange={(e)=>console.log(e)}>
-                          <option value="SIGKILL" selected>SIGKILL</option>
-                          <option value="SIGINT">SIGINT</option>
+                            <button className="btn btn-default btn-xs dropdown-toggle" type="button" data-toggle="dropdown">{this.state.selected_signal}
+                                <span className="caret"> </span>
+                            </button>
+                            <ul className="dropdown-menu">
+                              {signals}
+                            </ul>
+                            <button className='btn btn-default btn-xs'
+                                        id='step_instruction_button'
+                                        type='button'
+                                        title={`Send signal to pid ${this.state.inferior_pid}`}
+                                        onClick={this.send_signal}
+                                    >
+                                        send to inferior
+                            </button>
+                        </div>
 
 
-                        </select>
-
-                        <button className='btn btn-default btn-xs'
-                                    id='step_instruction_button'
-                                    type='button'
-                                    title={`Send signal to pid ${this.state.inferior_pid}`}
-                                    onClick={()=>{
-                                        let el = document.getElementById("signal_selection")
-                                        let signal = el.options[el.selectedIndex].value;
-                                        InferiorProgramInfo.send_signal(signal, this.state.inferior_pid)
-                                        }
-                                    }
-                                >
-                                    send
-                        </button>
                     </div>)
         }else{
             return <span>no inferior program running</span>

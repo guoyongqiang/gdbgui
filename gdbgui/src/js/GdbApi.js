@@ -1,5 +1,5 @@
 import {store} from './store.js';
-import Registers from './Registers.js';
+import Registers from './Registers.jsx';
 import Memory from './Memory.jsx';
 import Modal from './Modal.js';
 import Actions from './Actions.js';
@@ -234,7 +234,7 @@ const GdbApi = {
         cmds = cmds.concat(Registers.get_update_cmds())
 
         // re-fetch memory over desired range as specified by DOM inputs
-        cmds = cmds.concat(Memory.get_gdb_commands_from_inputs())
+        cmds = cmds.concat(Memory.get_gdb_commands_from_state())
 
         // refresh breakpoints
         cmds.push(GdbApi.get_break_list_cmd())

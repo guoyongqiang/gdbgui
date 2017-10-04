@@ -117,7 +117,7 @@ div.breakpoint{
     margin-right: 5px;
     display: none !important;
 }
-div.breakpoint:hover a span.breakpoint_trashcan, .variable:hover .right_help_icon_show_on_hover{
+div.breakpoint:hover div.breakpoint_trashcan, .variable:hover .right_help_icon_show_on_hover{
     display: inline !important;
 }
 .line_num{

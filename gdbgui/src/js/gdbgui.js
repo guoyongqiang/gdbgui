@@ -22,7 +22,7 @@ import SourceFileAutocomplete from './SourceFileAutocomplete.js';
 import FileOps from './FileOps.js';
 import Breakpoints from './Breakpoints.jsx';
 import Tree from './Tree.js';
-import Registers from './Registers.js';
+import Registers from './Registers.jsx';
 import GdbMiOutput from './GdbMiOutput.js';
 import Settings from './Settings.jsx';
 import Modal from './Modal.js';
@@ -123,9 +123,17 @@ ReactDOM.render(<Threads/>, document.getElementById('threads'))
 ReactDOM.render(<Breakpoints/>, document.getElementById('breakpoints'))
 ReactDOM.render(<SourceCodeHeading/>, document.getElementById('source_code_heading'))
 ReactDOM.render(<SourceCode/>, document.getElementById('code_container'))
-ReactDOM.render(<InferiorProgramInfo/>, document.getElementById('inferior_program_info'))
+ReactDOM.render(<InferiorProgramInfo signals={initial_data.signals} />, document.getElementById('inferior_program_info'))
+ReactDOM.render(<Registers signals={initial_data.signals} />, document.getElementById('registers'))
+ReactDOM.render(<Memory />, document.getElementById('memory'))
+
 // TODO make all these into react components
 // TODO remove jquery dependency
+Expressions.init()
+HoverVar.init()
+Locals.init()
+Settings.init()
+
 GlobalEvents.init()
 GdbApi.init()
 GdbCommandInput.init()
@@ -133,16 +141,10 @@ Modal.init()
 GdbConsoleComponent.init()
 GdbMiOutput.init()
 BinaryLoader.init()
-Registers.init()
 SourceFileAutocomplete.init()
-Memory.init()
-Expressions.init()
-HoverVar.init()
-Locals.init()
 Tree.init()
 VisibilityToggler.init()
 ShutdownGdbgui.init()
-Settings.init()
 FileOps.init()
 
 window.addEventListener("beforeunload", GdbCommandInput.shutdown)

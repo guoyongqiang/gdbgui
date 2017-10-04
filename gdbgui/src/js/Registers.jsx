@@ -1,13 +1,21 @@
-import {store, Reactor} from './store.js';
-import Util from './Util.js';
+import React from 'react'
+import {store} from './store.js';
+import ReactTable from './ReactTable.jsx';
 import Memory from './Memory.jsx';
 import GdbApi from './GdbApi.js';
 
-const Registers = {
-    init: function(){
-        new Reactor('#registers', Registers.render)
-    },
-    get_update_cmds: function(){
+class Registers extends React.Component {
+    constructor() {
+        super()
+        this.state = store._store
+        store.subscribe(this._store_change_callback.bind(this))
+    }
+
+    _store_change_callback(){
+        this.setState(store._store)
+    }
+
+    static get_update_cmds(){
         let cmds = []
         if(store.get('can_fetch_register_values') === true){
             if(store.get('register_names').length === 0){
@@ -21,22 +29,22 @@ const Registers = {
             Registers.clear_cached_values()
         }
         return cmds
-    },
-    cache_register_names: function(names){
+    }
+    static cache_register_names(names){
         // filter out non-empty names
         store.set('register_names', names.filter(name => name))
-    },
-    clear_register_name_cache: function(){
+    }
+    static clear_register_name_cache(){
         store.set('register_names', [])
-    },
-    clear_cached_values: function(){
+    }
+    static clear_cached_values(){
         store.set('previous_register_values', {})
         store.set('current_register_values', {})
-    },
-    inferior_program_exited: function(){
+    }
+    static inferior_program_exited(){
         Registers.clear_cached_values()
-    },
-    render: function(){
+    }
+    render(){
         let num_register_names = store.get('register_names').length
         , num_register_values = Object.keys(store.get('current_register_values')).length
 
@@ -75,24 +83,23 @@ const Registers = {
                     // if hex value is a valid value, convert it to a link
                     // and display decimal format too
                     if(obj['value'].indexOf('0x') === 0){
-                       disp_hex_val = Memory.make_addrs_into_links(hex_val_raw)
+                       disp_hex_val = Memory.make_addrs_into_links_react(hex_val_raw)
                        disp_dec_val = parseInt(obj['value'], 16).toString(10)
                     }
 
                     if (changed){
-                        name = `<span class='highlight bold'>${name}</span>`
-                        disp_hex_val = `<span class='highlight bold'>${disp_hex_val}</span>`
-                        disp_dec_val = `<span class='highlight bold'>${disp_dec_val}</span>`
+                        name = <span className='highlight bold'>{name}</span>
+                        disp_hex_val = <span className='highlight bold'>{disp_hex_val}</span>
+                        disp_dec_val = <span className='highlight bold'>{disp_dec_val}</span>
                     }
 
                 }
 
                 register_table_data.push([name, disp_hex_val, disp_dec_val])
             }
-
-            return Util.get_table(columns, register_table_data, 'font-size: 0.9em;')
+            return <ReactTable data={register_table_data} header={columns} style={{fontSize: '0.9em'}}/>
         }
-        return'<span class=placeholder>no data to display</span>'
+        return <span className='placeholder'>no data to display</span>
     }
 }
 

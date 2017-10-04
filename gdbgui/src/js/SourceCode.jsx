@@ -219,6 +219,9 @@ class SourceCode extends React.Component {
                 let paused_addr = this.state.paused_on_frame ? this.state.paused_on_frame.addr : null
                 return (<tr><td>cannot access address {paused_addr}</td></tr>)
             }
+            case states.FILE_MISSING:{
+                return (<tr><td>file not found: {this.state.fullname_to_render}</td></tr>)
+            }
             case states.NONE_AVAILABLE:{
                 return this.get_body_empty()
             }
@@ -231,7 +234,7 @@ class SourceCode extends React.Component {
     }
     render(){
         return(<div className={store.get('current_theme')} style={{height: '100%'}}>
-                    <table id='code_table' style={{width: '100%'}}>
+                    <table id='code_table' className={store.get('current_theme')}  style={{width: '100%'}}>
                     <tbody id='code_body'>
                         {this.get_body()}
                     </tbody>

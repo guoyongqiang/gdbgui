@@ -53,6 +53,7 @@ const SourceFileAutocomplete = {
             store.set('fullname_to_render', fullname)
             store.set('line_of_source_to_flash', 1)
             store.set('make_current_line_visible', true)
+            store.set('render_paused_frame_or_user_selection', 'user_selection')
         })
     },
     fetch_source_files: function(){
@@ -82,6 +83,9 @@ const SourceFileAutocomplete = {
             store.set('fullname_to_render',fullname)
             store.set('line_of_source_to_flash', line)
             store.set('make_current_line_visible', true)
+            store.set('render_paused_frame_or_user_selection', 'user_selection')
+
+
         }else if (store.get('source_file_paths').length === 0){
             // source file list has not been fetched yet, so fetch it
             SourceFileAutocomplete.fetch_source_files()

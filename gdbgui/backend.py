@@ -32,8 +32,8 @@ from pygdbmi.gdbcontroller import GdbController
 BASE_PATH = os.path.dirname(os.path.realpath(__file__))
 PARENTDIR = os.path.dirname(BASE_PATH)
 sys.path.append(PARENTDIR)
-from gdbgui import htmllistformatter
-from gdbgui import __version__
+from gdbgui import htmllistformatter  # noqa
+from gdbgui import __version__  # noqa
 
 TEMPLATE_DIR = os.path.join(BASE_PATH, 'templates')
 STATIC_DIR = os.path.join(BASE_PATH, 'static')
@@ -52,6 +52,7 @@ if match is not None and int(match.groups()[0]) >= 16:
     STARTUP_WITH_SHELL_OFF = True
 
 
+# create dictionary of signal names
 SIGNAL_NAME_TO_NUM = {}
 for n in dir(signal):
     if n.startswith('SIG') and '_' not in n:
@@ -197,6 +198,7 @@ def run_gdb_command(message):
             _gdb_state['gdb_controllers'].get(request.sid).write(cmd, read_response=False)
 
         except Exception as e:
+            print(e)
             err = traceback.format_exc()
             dbprint(traceback.format_exc())
             emit('error_running_gdb_command', {'message': err})
@@ -283,6 +285,7 @@ def gdbgui():
             'initial_binary_and_args': app.config['initial_binary_and_args'],
             'show_gdbgui_upgrades': app.config['show_gdbgui_upgrades'],
             'themes': THEMES,
+            'signals': SIGNAL_NAME_TO_NUM
         }
 
     return render_template('gdbgui.pug',

@@ -350,6 +350,10 @@ const initial_store_data = {
 
     // memory
     memory_cache: {},
+    start_addr: '',
+    end_addr: '',
+    bytes_per_line: 8,
+
 
     // breakpoints
     breakpoints: [],

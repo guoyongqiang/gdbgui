@@ -195,7 +195,7 @@ const process_gdb_response = function(response_array){
 
             }else if (r.payload.reason === 'signal-received'){
                 GdbConsoleComponent.add('gdbgui noticed a signal was recieved. ' +
-                    'If the program exited due to a fault, you can attempt to re-enter the store of the program when the fault ' +
+                    'If the program exited due to a fault, you can attempt to re-enter the state of the program when the fault ' +
                     'occurred by clicking the below button.')
                 GdbConsoleComponent.add_no_escape(`<a style="font-family: arial; margin-left: 10px;" class='btn btn-success backtrace'>Re-Enter Program (backtrace)</a>`)
 

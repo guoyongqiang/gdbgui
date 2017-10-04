@@ -70,9 +70,10 @@ const FileOps = {
                 FileOps.fetch_disassembly_for_missing_file(paused_addr)
             }
 
-        } else {
+        } else if (is_missing){
+            store.set('source_code_state', states.FILE_MISSING)
+        }else{
             store.set('source_code_state', states.NONE_AVAILABLE)
-
         }
     },
     get_source_file_obj_from_cache: function(fullname){
