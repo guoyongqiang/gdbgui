@@ -55,7 +55,7 @@ html
                                 =' '
                         ul.dropdown-menu
                             li
-                                a#gdbgui_settings_button.pointer.toggle_settings_view(title='settings') Settings
+                                a#gdbgui_settings_button.pointer(title='settings') Settings
                             li
                                 a.pointer(title='donate', href='/donate') Donate
                             li
@@ -187,20 +187,7 @@ html
                     #modal_footer(style='margin-top: 20px;')
                         button.btn.btn-success(type='button', data-dismiss='modal') Close
 
-
-        //- settings, hidden by default
-        //- settings_container takes up whole screen
-        #settings_container.hidden.toggle_settings_view
-
-            //- actual settings window, shown in middle of screen
-            #gdb_settings_modal
-                button.close.toggle_settings_view(type='button') ×
-                h4 Settings
-
-                #settings_body
-
-                div(style='margin-top: 20px;')
-                    button.btn.btn-success.toggle_settings_view(type='button', data-dismiss='modal') Close
+        #settings_container()
 
     script.
         initial_data = JSON.parse('!{initial_data}')

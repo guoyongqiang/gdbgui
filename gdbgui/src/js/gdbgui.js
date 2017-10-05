@@ -126,13 +126,13 @@ ReactDOM.render(<SourceCode/>, document.getElementById('code_container'))
 ReactDOM.render(<InferiorProgramInfo signals={initial_data.signals} />, document.getElementById('inferior_program_info'))
 ReactDOM.render(<Registers signals={initial_data.signals} />, document.getElementById('registers'))
 ReactDOM.render(<Memory />, document.getElementById('memory'))
+ReactDOM.render(<Settings />, document.getElementById('settings_container'))
 
 // TODO make all these into react components
 // TODO remove jquery dependency
 Expressions.init()
 HoverVar.init()
 Locals.init()
-Settings.init()
 
 GlobalEvents.init()
 GdbApi.init()

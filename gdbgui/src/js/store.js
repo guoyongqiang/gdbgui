@@ -104,6 +104,9 @@ const store = {
         if(arguments.length === 0){
             // return the whole store
             return _clone_obj(store._store)
+        }else if(arguments.length > 1){
+            console.error('unexpected number of arguments')
+            return
         }
         // the "get" trap returns a value
         if(store._store.hasOwnProperty(key)){
@@ -299,6 +302,7 @@ const initial_store_data = {
     gdb_version_array: [],  // this is parsed from gdb's output
     gdb_pid: undefined,
     can_fetch_register_values: true,  // set to false if using Rust and gdb v7.12.x (see https://github.com/cs01/gdbgui/issues/64)
+    show_settings: true,
 
     // preferences
     // syntax highlighting
@@ -306,7 +310,7 @@ const initial_store_data = {
     current_theme: localStorage.getItem('theme') || initial_data.themes[0],
     highlight_source_code: JSON.parse(localStorage.getItem('highlight_source_code')),  // get saved boolean to highlight source code
 
-    auto_add_breakpoint_to_main: JSON.parse(localStorage.getItem('auto_add_breakpoint_to_main')),
+    auto_add_breakpoint_to_main: true,
 
     pretty_print: true,  // whether gdb should "pretty print" variables. There is an option for this in Settings
     refresh_state_after_sending_console_command: true,  // If true, send commands to refresh GUI store after each command is sent from console
@@ -368,6 +372,16 @@ const initial_store_data = {
 
     status: {'text': '', 'error': false, 'warn': false},
     waiting_for_response: false
+}
+
+// restore saved localStorage data
+for(let key in initial_store_data){
+    if(typeof initial_store_data[key] === 'boolean'){
+        if(localStorage.hasOwnProperty(key)){
+            initial_store_data[key] = JSON.parse(localStorage.getItem(key))
+
+        }
+    }
 }
 
 
