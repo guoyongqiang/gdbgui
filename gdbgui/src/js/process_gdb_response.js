@@ -1,3 +1,9 @@
+/**
+ * This is the main callback when receiving a response from gdb.
+ * This callback generally updates the store, which causes components
+ * to update.
+ */
+
 import {store} from './store.js';
 import GdbMiOutput from './GdbMiOutput.js';
 import Breakpoints from './Breakpoints.jsx';
@@ -7,18 +13,13 @@ import FileOps from './FileOps.js';
 import StatusBar from './StatusBar.jsx';
 import Memory from './Memory.jsx';
 import GdbApi from './GdbApi.js';
+import Locals from './Locals.jsx';
 import GdbConsoleComponent from './GdbConsole.js';
 import GdbVariable from './GdbVariable.jsx';
 import Modal from './Modal.js';
 import Actions from './Actions.js';
 import SourceCode from './SourceCode.jsx';
 
-
-/**
- * This is the main callback when receiving a response from gdb.
- * This callback generally updates the store, which emits an event and
- * makes components re-render themselves.
- */
 const process_gdb_response = function(response_array){
     // update status with error or with last response
     let update_status = true
@@ -135,7 +136,7 @@ const process_gdb_response = function(response_array){
             // in gdb with '-var-create'. *Those* types of variables are referred to as "expressions" in gdbgui, and
             // are returned by gdbgui as "changelist", or have the keys "has_more", "numchild", "children", or "name".
             if ('variables' in r.payload){
-                store.set('locals', r.payload.variables)
+                Locals.save_locals(r.payload.variables)
             }
             // gdbgui expression (aka a gdb variable was changed)
             if ('changelist' in r.payload){

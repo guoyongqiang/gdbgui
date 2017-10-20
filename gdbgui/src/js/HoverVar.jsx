@@ -1,11 +1,21 @@
+/**
+ * A component to show/hide variable exploration when hovering over a variable
+ * in the source code
+ */
+
 import React from 'react';
-// import {store, Reactor} from './store.js';
-// import GdbApi from './GdbApi.js';
-// import Memory from './Memory.jsx';
-// import Util from './Util.js';
-// import constants from './constants.js';
+import {store} from './store.js';
 
 class HoverVar extends React.Component {
+    constructor(){
+        super()
+        this.state = store._store
+        store.subscribe(this._store_change_callback.bind(this))
+    }
+
+    _store_change_callback(){
+        this.setState(store._store)
+    }
     render(){
         return <div id='hovervar' className='hidden'>todo - hosdfver</div>
     }

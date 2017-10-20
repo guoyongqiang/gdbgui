@@ -24,7 +24,7 @@ class Expressions extends React.Component {
         // delete invalid objects
         this.objs_to_delete.map(obj => GdbVariable.delete_gdb_variable(obj.name))
 
-        content = this.objs_to_render.map(obj => <GdbVariable obj={obj} key={obj.expression} expression={obj.expression} expr_type='expression' />)
+        content = this.objs_to_render.map(obj => <GdbVariable obj={obj} key={obj.expression} expression={obj.expression} expr_type='expr' />)
 
         if(content.length === 0){
             content.push(<span key='empty' className='placeholder'>no expressions in this context</span>)

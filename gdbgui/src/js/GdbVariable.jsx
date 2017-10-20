@@ -1,3 +1,9 @@
+/**
+ * A component to render gdb user variables, and
+ * some library functions to interact with gdb. The library
+ * functions create gdb variable objects locally, update them,
+ * remove them, etc.
+ */
 import React from 'react';
 import Memory from './Memory.jsx';
 import Util from './Util.js';
@@ -6,21 +12,52 @@ import {store} from './store.js';
 import GdbApi from './GdbApi.js';
 
 
+
 class GdbVariable extends React.Component {
 
     render(){
         const is_root = true
-        if(this.props.obj.numchild > 0) {
-            return GdbVariable.get_ul_for_var_with_children(this.props.expression, this.props.obj, this.props.expr_type, is_root)
+
+        if(this.props.expr_type === 'local'){
+            return this.get_ul_for_local(this.props.obj)
         }else{
-            return GdbVariable.get_ul_for_var_without_children(this.props.expression, this.props.obj, this.props.expr_type, is_root)
+            if(this.props.obj.numchild > 0) {
+                return this.get_ul_for_var_with_children(this.props.expression, this.props.obj, this.props.expr_type, is_root)
+            }else{
+                return this.get_ul_for_var_without_children(this.props.expression, this.props.obj, this.props.expr_type, is_root)
+            }
         }
+    }
+    /**
+     * get unordered list for a "local" returned by gdb
+     * these are special snowflakes; gdb returns a small subset of information for
+     * locals. The list is useful to browse, but oftentimes needs to be expanded.
+     * If the user clicks on a local that can be expanded, gdbgui will ask gdb
+     * to create a full-fledged variable for the user to explore. gdbgui will then
+     * render that instead of the "local".
+     */
+    get_ul_for_local(local){
+        let can_be_expanded = local.can_be_expanded
+        , value = _.isString(local.value) ? Memory.make_addrs_into_links_react(local.value) : local.value
+        , onclick = can_be_expanded ? ()=> GdbVariable.create_variable(local.name, 'local') : ()=>{}
+
+        return(
+            <div>
+                <span onClick={onclick} className={can_be_expanded ? 'pointer' : ''}>
+                    {can_be_expanded ? '+' : ''} {local.name}: {value}
+                </span>
+                <span className='var_type'>
+                    {_.trim(local.type)}
+                </span>
+            </div>
+
+        )
     }
     /**
      * get unordered list for a variable that has children
      * @return unordered list, expanded or collapsed based on the key "show_children_in_ui"
      */
-    static get_ul_for_var_with_children(expression, mi_obj, expr_type, is_root=false){
+    get_ul_for_var_with_children(expression, mi_obj, expr_type, is_root=false){
         let child_tree
         if(mi_obj.show_children_in_ui){
 
@@ -29,9 +66,9 @@ class GdbVariable extends React.Component {
                 content = []
                 for(let child of mi_obj.children){
                     if(child.numchild > 0){
-                        content.push(<li key={child.exp}>{GdbVariable.get_ul_for_var_with_children(child.exp, child, expr_type)}</li>)
+                        content.push(<li key={child.exp}>{this.get_ul_for_var_with_children(child.exp, child, expr_type)}</li>)
                     }else{
-                        content.push(<li key={child.exp}>{GdbVariable.get_ul_for_var_without_children(child.exp, child, expr_type)}</li>)
+                        content.push(<li key={child.exp}>{this.get_ul_for_var_without_children(child.exp, child, expr_type)}</li>)
                     }
                 }
             }else{
@@ -46,23 +83,22 @@ class GdbVariable extends React.Component {
         }
 
         let plus_or_minus = mi_obj.show_children_in_ui ? '-' : '+'
-        return GdbVariable._get_ul_for_var(expression, mi_obj, expr_type, is_root, plus_or_minus, child_tree, mi_obj.numchild)
+        return this._get_ul_for_var(expression, mi_obj, expr_type, is_root, plus_or_minus, child_tree, mi_obj.numchild)
     }
-    static get_ul_for_var_without_children(expression, mi_obj, expr_type, is_root=false){
-        return GdbVariable._get_ul_for_var(expression, mi_obj, expr_type, is_root)
+    get_ul_for_var_without_children(expression, mi_obj, expr_type, is_root=false){
+        return this._get_ul_for_var(expression, mi_obj, expr_type, is_root)
     }
     /**
      * Get ul for a variable with or without children
      */
-    static _get_ul_for_var(expression, mi_obj, is_root, expr_type, plus_or_minus='', child_tree='', numchild=0){
-        let
-            delete_button = is_root ? <span className='glyphicon glyphicon-trash pointer' onClick={()=>GdbVariable.click_delete_gdb_variable(mi_obj.name)}/> : ''
+    _get_ul_for_var(expression, mi_obj, expr_type, is_root, plus_or_minus='', child_tree='', numchild=0){
+        let delete_button = is_root ? <span className='glyphicon glyphicon-trash pointer' onClick={()=>GdbVariable.delete_gdb_variable(mi_obj.name)}/> : ''
             , tree = numchild > 0 ? <span className='glyphicon glyphicon-tree-deciduous pointer' onClick={()=>GdbVariable.click_draw_tree_gdb_variable(mi_obj.name)} /> : ''
             , toggle_classes = numchild > 0 ? 'pointer' : ''
             , val = _.isString(mi_obj.value) ? Memory.make_addrs_into_links_react(mi_obj.value) : mi_obj.value
             , plot_content = ''
             , plot_button = ''
-            ,plusminus_click_callback = numchild > 0 ? () => GdbVariable.click_toggle_children_visibility(expression) : ()=>{}
+            , plusminus_click_callback = numchild > 0 ? () => GdbVariable.click_toggle_children_visibility(mi_obj.name) : ()=>{}
 
         if(mi_obj.can_plot && mi_obj.show_plot){
             // dots are not allowed in the dom as id's. replace with '-'.
@@ -99,16 +135,20 @@ class GdbVariable extends React.Component {
             {child_tree}
         </ul>
     }
+
+    /* ======================================== */
+    // static methods - These might be moved to their own object
+    /* ======================================== */
+
     /**
-     * Create a new variable in gdb. gdb automatically assigns
+     * Create a new variable in gdb. gdb automatically chooses and assigns
      * a unique variable name.
      */
     static create_variable(expression, expr_type){
         store.set('expr_being_created', expression)
         store.set('expr_type', expr_type)
 
-        // - means auto assign variable name in gdb
-        // * means evaluate it at the current frame
+        // surround in quotes if we found a quote
         if(expression.length > 0 && expression.indexOf('"') !== 0){
             expression = '"' + expression + '"'
         }
@@ -117,6 +157,8 @@ class GdbVariable extends React.Component {
             cmds.push('-enable-pretty-printing')
         }
 
+        // - means auto assign variable name in gdb
+        // * means evaluate it at the current frame
         let var_create_cmd = `-var-create - * ${expression}`
         if(expr_type === 'hover'){
             var_create_cmd = constants.IGNORE_ERRORS_TOKEN_STR + var_create_cmd
@@ -124,49 +166,6 @@ class GdbVariable extends React.Component {
         cmds.push(var_create_cmd)
 
         GdbApi.run_gdb_command(cmds)
-    }
-    /**
-     * gdb returns objects for its variables,, but before we save that
-     * data locally, we will add more fields to make it more useful for gdbgui
-     * @param obj (object): mi object returned from gdb
-     * @param expr_type (str): type of expression being created (see store creation for documentation)
-     */
-    static prepare_gdb_obj_for_storage(obj){
-        let new_obj = $.extend(true, {}, obj)
-        // obj was copied, now add some additional fields used by gdbgui
-
-        // A varobj's contents may be provided by a Python-based pretty-printer.
-        // In this case the varobj is known as a dynamic varobj.
-        // Dynamic varobjs have slightly different semantics in some cases.
-        // https://sourceware.org/gdb/onlinedocs/gdb/GDB_002fMI-Variable-Objects.html#GDB_002fMI-Variable-Objects
-        new_obj.numchild = obj.dynamic ? parseInt(obj.has_more) : parseInt(obj.numchild)
-        new_obj.children = []  // actual child objects are fetched dynamically when the user requests them
-        new_obj.show_children_in_ui = false
-
-        // this field is not returned when the variable is created, but
-        // it is returned when the variables are updated
-        // it is returned by gdb mi as a string, and we assume it starts out in scope
-        new_obj.in_scope = 'true'
-        new_obj.expr_type = store.get('expr_type')
-
-        // can only be plotted if: value is an expression (not a local), and value is numeric
-        new_obj.can_plot = (new_obj.expr_type === 'expr') && !window.isNaN(parseFloat(new_obj.value))
-        new_obj.dom_id_for_plot = new_obj.name
-            .replace(/\./g, '-')  // replace '.' with '-'
-            .replace(/\$/g, '_')  // replace '$' with '-'
-            .replace(/\[/g, '_')  // replace '[' with '_'
-            .replace(/\]/g, '_')  // replace ']' with '_'
-        new_obj.show_plot = false  // used when rendering to decide whether to show plot or not
-        // push to this array each time a new value is assigned if value is numeric.
-        // Plots use this data
-        if(new_obj.value.indexOf('0x') === 0){
-            new_obj.values = [parseInt(new_obj.value, 16)]
-        }else if (!window.isNaN(parseFloat(new_obj.value))){
-            new_obj.values = [new_obj.value]
-        }else{
-            new_obj.values = []
-        }
-        return new_obj
     }
     /**
      * After a variable is created, we need to link the gdb
@@ -251,6 +250,49 @@ class GdbVariable extends React.Component {
                 GdbVariable.fetch_and_show_children_for_var(child.name)
             }
         }
+    }
+    /**
+     * gdb returns objects for its variables,, but before we save that
+     * data locally, we will add more fields to make it more useful for gdbgui
+     * @param obj (object): mi object returned from gdb
+     * @param expr_type (str): type of expression being created (see store creation for documentation)
+     */
+    static prepare_gdb_obj_for_storage(obj){
+        let new_obj = $.extend(true, {}, obj)
+        // obj was copied, now add some additional fields used by gdbgui
+
+        // A varobj's contents may be provided by a Python-based pretty-printer.
+        // In this case the varobj is known as a dynamic varobj.
+        // Dynamic varobjs have slightly different semantics in some cases.
+        // https://sourceware.org/gdb/onlinedocs/gdb/GDB_002fMI-Variable-Objects.html#GDB_002fMI-Variable-Objects
+        new_obj.numchild = obj.dynamic ? parseInt(obj.has_more) : parseInt(obj.numchild)
+        new_obj.children = []  // actual child objects are fetched dynamically when the user requests them
+        new_obj.show_children_in_ui = false
+
+        // this field is not returned when the variable is created, but
+        // it is returned when the variables are updated
+        // it is returned by gdb mi as a string, and we assume it starts out in scope
+        new_obj.in_scope = 'true'
+        new_obj.expr_type = store.get('expr_type')
+
+        // can only be plotted if: value is an expression (not a local), and value is numeric
+        new_obj.can_plot = (new_obj.expr_type === 'expr') && !window.isNaN(parseFloat(new_obj.value))
+        new_obj.dom_id_for_plot = new_obj.name
+            .replace(/\./g, '-')  // replace '.' with '-'
+            .replace(/\$/g, '_')  // replace '$' with '-'
+            .replace(/\[/g, '_')  // replace '[' with '_'
+            .replace(/\]/g, '_')  // replace ']' with '_'
+        new_obj.show_plot = false  // used when rendering to decide whether to show plot or not
+        // push to this array each time a new value is assigned if value is numeric.
+        // Plots use this data
+        if(new_obj.value.indexOf('0x') === 0){
+            new_obj.values = [parseInt(new_obj.value, 16)]
+        }else if (!window.isNaN(parseFloat(new_obj.value))){
+            new_obj.values = [new_obj.value]
+        }else{
+            new_obj.values = []
+        }
+        return new_obj
     }
     /**
      * function render a plot on an existing element
@@ -349,6 +391,8 @@ class GdbVariable extends React.Component {
                 // expand
                 GdbVariable.fetch_and_show_children_for_var(gdb_var_name)
             }
+        }else{
+            console.error('developer error - expected to find gdb variable object')
         }
     }
     static click_toggle_plot(gdb_var_name){
@@ -418,9 +462,6 @@ class GdbVariable extends React.Component {
                 // error
             }
         }
-    }
-    static click_delete_gdb_variable(gdb_variable){
-        GdbVariable.delete_gdb_variable(gdb_variable)
     }
     static click_draw_tree_gdb_variable(gdb_variable){
         store.set('root_gdb_tree_var', gdb_variable)

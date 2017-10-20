@@ -1,3 +1,7 @@
+/**
+ * An object to manage the websocket connection to the python server that manages gdb,
+ * to send various commands to gdb, to and to dispatch gdb responses to gdbgui.
+ */
 import {store} from './store.js';
 import Registers from './Registers.jsx';
 import Memory from './Memory.jsx';

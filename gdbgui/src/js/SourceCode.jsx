@@ -1,3 +1,7 @@
+/**
+ * A component to render source code, assembly, and break points
+ */
+
 import {store} from './store.js';
 import React from 'react';
 import FileOps from './FileOps.js';
@@ -13,7 +17,7 @@ class SourceCode extends React.Component {
 
         document.getElementById('jump_to_line').onkeyup = (e)=>{
             if (e.keyCode === constants.ENTER_BUTTON_NUM){
-                SourceCode.view_line(e.currentTarget.value)
+                SourceCode.set_line_state(e.currentTarget.value)
             }
         }
 
@@ -282,10 +286,10 @@ class SourceCode extends React.Component {
     static view_file(fullname, line){
         store.set('render_paused_frame_or_user_selection', 'user_selection')
         store.set('fullname_to_render', fullname)
-        SourceCode.view_line(line)
+        SourceCode.set_line_state(line)
     }
 
-    static view_line(line){
+    static set_line_state(line){
         store.set('line_of_source_to_flash', parseInt(line))
         store.set('make_current_line_visible', true)
     }
