@@ -62,15 +62,18 @@ const store = {
 
         // update the store
         if(_value_changed(oldval, value)){
+            _check_type_match(oldval, value, key)
 
             if(store.options.debug) {
-                console.log('stator ' + key, oldval, ' -> ', value)
+                console.log(key, oldval, ' -> ', value)
             }
-
-            _check_type_match(oldval, value, key)
 
             // *replace* the property with a clone of the value
             t[key] = _clone_obj(value)
+
+            if(store._changed_keys.indexOf(key) === -1){
+                store._changed_keys.push(key)
+            }
 
             // suppress active timeouts (if any)
             if(store._debounce_timeout){
@@ -78,8 +81,7 @@ const store = {
                 store._batched_event_count++
             }
 
-            // emit event, or schedule event to be emitted so that Reactors and listeners are notified
-            // that the store changed
+            // publish changes, or schedule changes to be published
             if(store._batched_event_count >= store.options.max_batched_event_count){
                 // emit event immediately since we have suppressed enough already
                 if(store.options.debug){
@@ -135,13 +137,27 @@ const store = {
         store._callbacks = store._callbacks.filter(c => c !== callback_function)
     },
     /**
-     * Run subscribers' callback functions. Reactors are automatically part of this list.
+     * Run subscribers' callback functions. An array of the changed keys is passed to the callback function.
      */
     publish: function(){
+        const changed_keys = store._changed_keys
+        if(changed_keys.length === 0){
+            console.error('no keys were changed, yet we are trying to publish a store change')
+            return
+        }
+
+        // make sure _changed_keys is reset before executing callbacks
+        // (if callbacks modify state, the list of keys the callback changed would be wiped out)
+        store._changed_keys = []
         store._clear_debounce_timeout()
         store._batched_store_changes = 0
-        store._callbacks.map(c => c())
+        store._callbacks.map(c => c(changed_keys))
+
     },
+    /**
+     * keys that were modified in the store since the last publish
+     */
+    _changed_keys: [],
     /**
      * array of functions to be called when store changes (usually Reactor.render())
      */
@@ -173,94 +189,6 @@ const store = {
      */
     _batched_store_changes: 0,
     _store_created: false
-}
-
-/**
- * DEPRECATED - Use ReactJS Components instead
- * TODO Replace all Reactors with ReactJS Components and erase this class
- *
- * Reactive component that links a html-returning function to a DOM node. _Any changes to `store` will cause all `Reactor`s to
- * call their respective render functions and potentially update the html of their DOM node.
- * @param {string} element selector to have its inner html updated (i.e. `#my_id`). Selector must match exactly one node or an error will be raised.
- * @param {function} render_callback function that returns html that relplaces the inner html of element. This function is run when the store is updated.
- * @param {object} options Option list:
- */
-function Reactor(element, render_callback, options={}){
-    // select from dom once and cache it
-    let nodes = document.querySelectorAll(element)
-    if(nodes.length !== 1){
-        throw `Reactor: querySelector "${element}" matched ${nodes.length} nodes. Expected 1.`
-    }else if (store._elements.indexOf(element) !== -1) {
-        throw `Reactor: querySelector "${element}" is already bound to a Reactor.`
-    }else{
-        store._elements.push(element)
-    }
-    this.element = element
-    this.node = nodes[0]
-
-    let default_options = {
-        listen_to_global_store: true,
-        render_on_init: true,
-        before_render: (reactor)=>{void reactor},
-        should_render: (reactor)=>{void reactor; return true},
-        before_dom_update: (reactor)=>{void reactor},
-        after_dom_update: (reactor)=>{void reactor},
-        after_render: (reactor)=>{void reactor},
-    }
-    let invalid_options = Object.keys(options)
-                            .filter(o => Object.keys(default_options).indexOf(o) === -1)
-
-    if(invalid_options.length > 0){
-        invalid_options.map(o => console.error(`Reactor got invalid option "${o}"`))
-        return
-    }
-    // save options
-    this.options = Object.assign(default_options, options)
-
-    // store the render callback
-    if(!render_callback || typeof render_callback !== 'function'){
-        throw `Reactor did not receive a render callback function. This argument should be a function that returns html to populate the DOM element.`
-    }
-    this._render = render_callback.bind(this)  // this._render is called in this.render
-
-    if(this.options.listen_to_global_store){
-        // call render function when global store changes
-        store.subscribe(this.render.bind(this))
-    }
-    if(this.options.render_on_init){
-        this.render() // call the update function immediately so it renders itself
-    }
-}
-
-/**
- * Calls the `render()` callback of the Reactor instance, and updates the inner html
- * of the Reactors's node if the new html does not match the previously rendered html.
- * i.e. `myreactor.render()`
- *
- * The render function looks like this has various lifecycle functions, all of them optional. The source code is displayed below for clarity.
- */
-Reactor.prototype.render = function(){
-    this.options.before_render(this)
-    if(this.options.should_render(this)){
-        // compute new value of node (it may or may not have changed)
-        let new_html = this._render(this)
-
-        let do_update = this.options.force_update
-
-        if(new_html !== this.old_new_html){
-            do_update = true
-        }
-
-        // update dom only if the return value of render changed
-        if(do_update){
-            this.options.force_update = false
-            this.options.before_dom_update(this)
-            this.node.innerHTML = new_html
-            this.options.after_dom_update(this)
-            this.old_new_html = new_html
-        }
-    }
-    this.options.after_render(this)
 }
 
 /****** helper functions ********/
@@ -387,6 +315,5 @@ for(let key in initial_store_data){
 
 module.exports = {
     store: store,
-    Reactor: Reactor,
     initial_store_data: initial_store_data
 }

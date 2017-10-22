@@ -117,8 +117,10 @@ class Breakpoints extends React.Component {
         this.state = this._get_applicable_global_state()
         store.subscribe(this._store_change_callback.bind(this))
     }
-    _store_change_callback(){
-        this.setState(this._get_applicable_global_state())
+    _store_change_callback(keys){
+        if(_.intersection(['breakpoints'], keys).length){
+            this.setState(this._get_applicable_global_state())
+        }
     }
     _get_applicable_global_state(){
         return {

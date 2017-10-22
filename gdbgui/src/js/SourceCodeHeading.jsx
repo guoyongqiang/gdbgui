@@ -3,22 +3,28 @@ import {store} from './store.js';
 import {FileLink} from './Links.jsx';
 
 class SourceCodeHeading extends React.Component {
-    constructor(props) {
-        void(props)
+    store_keys = [
+        'fullname_to_render',
+        'paused_on_frame',
+        'line_of_source_to_flash',
+    ]
+    constructor() {
         super()
-        this.state = {
-                fullname_to_render: store._store.fullname_to_render,
-                paused_on_frame: store._store.paused_on_frame,
-                line_of_source_to_flash: store._store.line_of_source_to_flash,
-            }
+        this._store_change_callback = this._store_change_callback.bind(this)
+        this.state = this._get_applicable_global_state()
         store.subscribe(this._store_change_callback.bind(this))
     }
-    _store_change_callback(){
-        this.setState({
-                fullname_to_render: store._store.fullname_to_render,
-                paused_on_frame: store._store.paused_on_frame,
-                line_of_source_to_flash: store._store.line_of_source_to_flash,
-            })
+    _store_change_callback(keys){
+        if(_.intersection(this.store_keys, keys).length){
+            this.setState(this._get_applicable_global_state())
+        }
+    }
+    _get_applicable_global_state(){
+        let applicable_state = {}
+        for (let k of this.store_keys){
+            applicable_state[k] = store._store[k]
+        }
+        return applicable_state
     }
     render(){
         let line = this.state.paused_on_frame ? this.state.paused_on_frame.line : this.state.line_of_source_to_flash

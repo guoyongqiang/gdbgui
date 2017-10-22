@@ -1,18 +1,39 @@
+/**
+ * A component to display, fetch, and store register
+ */
+
+
 import React from 'react'
 import {store} from './store.js';
+import constants from './constants.js';
 import ReactTable from './ReactTable.jsx';
 import Memory from './Memory.jsx';
 import GdbApi from './GdbApi.js';
 
 class Registers extends React.Component {
+    store_keys = [
+        'inferior_program',
+        'previous_register_values',
+        'current_register_values',
+        'register_names',
+    ]
     constructor() {
         super()
-        this.state = store._store
+        this._store_change_callback = this._store_change_callback.bind(this)
+        this.state = this._get_applicable_global_state()
         store.subscribe(this._store_change_callback.bind(this))
     }
-
-    _store_change_callback(){
-        this.setState(store._store)
+    _store_change_callback(keys){
+        if(_.intersection(this.store_keys, keys).length){
+            this.setState(this._get_applicable_global_state())
+        }
+    }
+    _get_applicable_global_state(){
+        let applicable_state = {}
+        for (let k of this.store_keys){
+            applicable_state[k] = store._store[k]
+        }
+        return applicable_state
     }
 
     static get_update_cmds(){
@@ -48,7 +69,12 @@ class Registers extends React.Component {
         let num_register_names = store.get('register_names').length
         , num_register_values = Object.keys(store.get('current_register_values')).length
 
-        if(num_register_names > 0 && num_register_values > 0 && num_register_names !== num_register_values){
+        if(this.state.inferior_program !== constants.inferior_states.paused){
+            return <span className='placeholder'>no data to display</span>
+        }
+
+        if((num_register_names > 0 && num_register_values > 0 && num_register_names !== num_register_values) ||
+            (num_register_names === 0) ){
             // Somehow register names and values do not match. Clear cached values, then refetch both.
             Registers.clear_register_name_cache()
             Registers.clear_cached_values()

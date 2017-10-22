@@ -119,20 +119,6 @@ Split(['#middle', '#bottom'], {
     sizes: [70, 30],
 })
 
-void(React)  // ReactDOM secretly depends on React; avoid "'React' is defined but never used  no-unused-vars"
-ReactDOM.render(<StatusBar/>, document.getElementById('status'))
-ReactDOM.render(<Threads/>, document.getElementById('threads'))
-ReactDOM.render(<Breakpoints/>, document.getElementById('breakpoints'))
-ReactDOM.render(<SourceCodeHeading/>, document.getElementById('source_code_heading'))
-ReactDOM.render(<SourceCode/>, document.getElementById('code_container'))
-ReactDOM.render(<InferiorProgramInfo signals={initial_data.signals} />, document.getElementById('inferior_program_info'))
-ReactDOM.render(<Registers signals={initial_data.signals} />, document.getElementById('registers'))
-ReactDOM.render(<Memory />, document.getElementById('memory'))
-ReactDOM.render(<Settings />, document.getElementById('settings_container'))
-ReactDOM.render(<Expressions />, document.getElementById('expressions'))
-ReactDOM.render(<Locals />, document.getElementById('locals'))
-ReactDOM.render(<HoverVar />, document.getElementById('hovervar_container'))
-
 // TODO make all these into react components
 // TODO remove jquery dependency
 
@@ -148,6 +134,21 @@ Tree.init()
 VisibilityToggler.init()
 ShutdownGdbgui.init()
 FileOps.init()
+
+void(React)  // ReactDOM secretly depends on React; avoid "'React' is defined but never used  no-unused-vars"
+ReactDOM.render(<StatusBar/>, document.getElementById('status'))
+ReactDOM.render(<Threads/>, document.getElementById('threads'))
+ReactDOM.render(<Breakpoints/>, document.getElementById('breakpoints'))
+ReactDOM.render(<SourceCodeHeading/>, document.getElementById('source_code_heading'))
+ReactDOM.render(<SourceCode/>, document.getElementById('code_container'))
+ReactDOM.render(<InferiorProgramInfo signals={initial_data.signals} />, document.getElementById('inferior_program_info'))
+ReactDOM.render(<Registers signals={initial_data.signals} />, document.getElementById('registers'))
+ReactDOM.render(<Memory />, document.getElementById('memory'))
+ReactDOM.render(<Settings />, document.getElementById('settings_container'))
+ReactDOM.render(<Expressions />, document.getElementById('expressions'))
+ReactDOM.render(<Locals />, document.getElementById('locals'))
+ReactDOM.render(<HoverVar />, document.getElementById('hovervar_container'))
+
 
 window.addEventListener("beforeunload", GdbCommandInput.shutdown)
 window.onbeforeunload = () => ('text here makes dialog appear when exiting. Set function to back to null for nomal behavior.')

@@ -2,18 +2,30 @@ import React from 'react'
 import {store} from './store.js'
 
 class InferiorProgramInfo extends React.Component {
-
+    store_keys = [
+        'inferior_pid',
+    ]
     constructor() {
         super()
         this.send_signal = this.send_signal.bind(this)
         this.get_choice = this.get_choice.bind(this)
+        this._store_change_callback = this._store_change_callback.bind(this)
         this.state = {inferior_pid: store._store.inferior_pid,
             selected_signal: 'SIGINT'}
         store.subscribe(this._store_change_callback.bind(this))
     }
 
-    _store_change_callback(){
-        this.setState({inferior_pid: store._store.inferior_pid,})
+    _store_change_callback(keys){
+        if(_.intersection(this.store_keys, keys).length){
+            this.setState(this._get_applicable_global_state())
+        }
+    }
+    _get_applicable_global_state(){
+        let applicable_state = {}
+        for (let k of this.store_keys){
+            applicable_state[k] = store._store[k]
+        }
+        return applicable_state
     }
 
     send_signal(){

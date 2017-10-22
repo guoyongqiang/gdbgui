@@ -1,3 +1,10 @@
+/**
+ * The Memory component allows the user to view
+ * data stored at memory locations. It has some
+ * static methods used by other objects to turn text into a clickable
+ * address. It also has methods to manage the global store of memory data.
+ */
+
 import {store} from './store.js';
 import GdbApi from './GdbApi.js';
 import constants from './constants.js'
@@ -5,16 +12,6 @@ import MemoryLink from './MemoryLink.jsx';
 import ReactTable from './ReactTable.jsx';
 import React from 'react';
 
-// class MemoryRow extends React.Component {
-//     render(){
-
-//     }
-// }
-
-/**
- * The Memory component allows the user to view
- * data stored at memory locations
- */
 class Memory extends React.Component {
     static el_start = document.getElementById('memory_start_address')
     static el_end = document.getElementById('memory_end_address')
@@ -23,18 +20,34 @@ class Memory extends React.Component {
     static DEFAULT_ADDRESS_DELTA_BYTES = 31
     static DEFAULT_BYTES_PER_LINE = 31
 
+    store_keys = [
+        'start_addr',
+        'end_addr',
+        'bytes_per_line',
+        'memory_cache',
+    ]
     constructor() {
         super()
-        this.state = store._store
+
+        this._store_change_callback = this._store_change_callback.bind(this)
+        this.state = this._get_applicable_global_state()
         store.subscribe(this._store_change_callback.bind(this))
 
         Memory.el_start.onkeyup = Memory.keyup_in_memory_inputs
         Memory.el_end.onkeyup = Memory.keyup_in_memory_inputs
         Memory.el_bytes_per_line.onkeyup = Memory.keyup_in_memory_inputs
     }
-
-    _store_change_callback(){
-        this.setState(store._store)
+    _store_change_callback(keys){
+        if(_.intersection(this.store_keys, keys).length){
+            this.setState(this._get_applicable_global_state())
+        }
+    }
+    _get_applicable_global_state(){
+        let applicable_state = {}
+        for (let k of this.store_keys){
+            applicable_state[k] = store._store[k]
+        }
+        return applicable_state
     }
 
     /**

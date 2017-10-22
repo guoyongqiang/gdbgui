@@ -92,13 +92,15 @@ class GdbVariable extends React.Component {
      * Get ul for a variable with or without children
      */
     _get_ul_for_var(expression, mi_obj, expr_type, is_root, plus_or_minus='', child_tree='', numchild=0){
-        let delete_button = is_root ? <span className='glyphicon glyphicon-trash pointer' onClick={()=>GdbVariable.delete_gdb_variable(mi_obj.name)}/> : ''
-            , tree = numchild > 0 ? <span className='glyphicon glyphicon-tree-deciduous pointer' onClick={()=>GdbVariable.click_draw_tree_gdb_variable(mi_obj.name)} /> : ''
-            , toggle_classes = numchild > 0 ? 'pointer' : ''
+        let delete_button = (is_root && expr_type === 'expr') ? <span className='glyphicon glyphicon-trash pointer' onClick={()=>GdbVariable.delete_gdb_variable(mi_obj.name)}/> : ''
+            , has_children = numchild > 0
+            , can_draw_tree = (has_children && (expr_type === 'expr' || expr_type === 'local'))  // hover var can't draw tree
+            , tree = can_draw_tree ? <span className='glyphicon glyphicon-tree-deciduous pointer' onClick={()=>GdbVariable.click_draw_tree_gdb_variable(mi_obj.name)} /> : ''
+            , toggle_classes = has_children ? 'pointer' : ''
             , val = _.isString(mi_obj.value) ? Memory.make_addrs_into_links_react(mi_obj.value) : mi_obj.value
             , plot_content = ''
             , plot_button = ''
-            , plusminus_click_callback = numchild > 0 ? () => GdbVariable.click_toggle_children_visibility(mi_obj.name) : ()=>{}
+            , plusminus_click_callback = has_children ? () => GdbVariable.click_toggle_children_visibility(mi_obj.name) : ()=>{}
 
         if(mi_obj.can_plot && mi_obj.show_plot){
             // dots are not allowed in the dom as id's. replace with '-'.

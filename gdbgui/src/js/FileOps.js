@@ -11,7 +11,26 @@ const FileOps = {
         document.getElementById('fetch_assembly_cur_line').onclick = FileOps.fetch_assembly_cur_line
         document.getElementById('refresh_cached_source_files').onclick = FileOps.refresh_cached_source_files
     },
-    _store_change_callback: function(){
+    _store_change_callback: function(keys){
+        if(_.intersection(
+            ['inferior_program',
+            'render_paused_frame_or_user_selection',
+            'paused_on_frame',
+            'current_assembly_address',
+            'disassembly_for_missing_file',
+            'highlight_source_code',
+            'missing_files',
+            'files_being_fetched',
+            'gdb_version_array',
+            'interpreter',
+            'fullname_to_render',
+            'line_of_source_to_flash',
+            'cached_source_files'], keys).length === 0)
+        {
+            // FileOps is not affected by this key
+            return
+        }
+
         // TODO state of inferior after backtrace remains running, so source isn't displayed. Need to fix this.
         if(store.get('inferior_program') === constants.inferior_states.running){
             return

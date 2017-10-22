@@ -11,6 +11,19 @@ import constants from './constants.js';
 
 class SourceCode extends React.Component {
     static el_code_container = $('#code_container')  // todo: no jquery
+    store_keys = [
+        'fullname_to_render',
+        'cached_source_files',
+        'missing_files',
+        'disassembly_for_missing_file',
+        'line_of_source_to_flash',
+        'paused_on_frame',
+        'breakpoints',
+        'source_code_state',
+        'make_current_line_visible',
+        'render_paused_frame_or_user_selection',
+        'current_theme'
+    ]
 
     constructor() {
         super()
@@ -27,26 +40,23 @@ class SourceCode extends React.Component {
         this._get_assm_row = this._get_assm_row.bind(this)
         this.click_gutter = this.click_gutter.bind(this)
         this.is_paused_on_this_line = this.is_paused_on_this_line.bind(this)
+        this._store_change_callback = this._store_change_callback.bind(this)
 
         this.state = this._get_applicable_global_state()
         store.subscribe(this._store_change_callback.bind(this))
     }
 
-    _store_change_callback(){
-        this.setState(this._get_applicable_global_state())
+    _store_change_callback(keys){
+        if(_.intersection(this.store_keys, keys).length){
+            this.setState(this._get_applicable_global_state())
+        }
     }
     _get_applicable_global_state(){
-        return {
-            fullname_to_render: store._store.fullname_to_render,
-            cached_source_files: store._store.cached_source_files,
-            missing_files: store._store.missing_files,
-            disassembly_for_missing_file: store._store.disassembly_for_missing_file,
-            line_of_source_to_flash: store._store.line_of_source_to_flash,
-            paused_on_frame: store._store.paused_on_frame,
-            breakpoints: store._store.breakpoints,
-            source_code_state: store._store.source_code_state,
-            make_current_line_visible: store._store.make_current_line_visible,
+        let applicable_state = {}
+        for (let k of this.store_keys){
+            applicable_state[k] = store._store[k]
         }
+        return applicable_state
     }
 
     click_gutter(line_num){
@@ -237,8 +247,8 @@ class SourceCode extends React.Component {
 
     }
     render(){
-        return(<div className={store.get('current_theme')} style={{height: '100%'}}>
-                    <table id='code_table' className={store.get('current_theme')}  style={{width: '100%'}}>
+        return(<div className={this.state.current_theme} style={{height: '100%'}}>
+                    <table id='code_table' className={this.state.current_theme}  style={{width: '100%'}}>
                     <tbody id='code_body'>
                         {this.get_body()}
                     </tbody>

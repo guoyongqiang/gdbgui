@@ -8,14 +8,25 @@ import {store} from './store.js';
 import GdbVariable from './GdbVariable.jsx';
 
 class Locals extends React.Component {
+    store_keys = ['expressions', 'locals']
     constructor(){
         super()
-        this.state = store._store
+        this._store_change_callback = this._store_change_callback.bind(this)
+        this.state = this._get_applicable_global_state()
         store.subscribe(this._store_change_callback.bind(this))
     }
 
-    _store_change_callback(){
-        this.setState(store._store)
+    _store_change_callback(keys){
+        if(_.intersection(this.store_keys, keys).length){
+            this.setState(this._get_applicable_global_state())
+        }
+    }
+    _get_applicable_global_state(){
+        let applicable_state = {}
+        for (let k of this.store_keys){
+            applicable_state[k] = store._store[k]
+        }
+        return applicable_state
     }
 
     render(){

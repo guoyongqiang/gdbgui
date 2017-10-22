@@ -10,8 +10,10 @@ class Expressions extends React.Component {
         store.subscribe(this._store_change_callback.bind(this))
     }
 
-    _store_change_callback(){
-        this.setState(store._store)
+    _store_change_callback(keys){
+        if(_.intersection(['expressions'], keys).length){
+            this.setState(store._store)
+        }
     }
 
     render(){
