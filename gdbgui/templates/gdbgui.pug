@@ -91,7 +91,7 @@ html
 
             #middle_right.content(style='height: 100%; float: left; overflow-y: auto; overflow-x: visible;')
                 //- stack, vars, memory, breakpoints, registers
-                div.no_padding
+                div.no_padding(style='font-size: 0.9em')
                     div.titlebar.flex.visibility_toggler(data-visibility_target_selector_string="#threads", data-glyph_selector='#threads_glyph')
                         span.glyphicon.glyphicon-chevron-down#threads_glyph(style='margin-right: 6px;')
                         span.lighttext call stack

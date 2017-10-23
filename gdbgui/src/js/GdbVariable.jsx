@@ -92,10 +92,11 @@ class GdbVariable extends React.Component {
      * Get ul for a variable with or without children
      */
     _get_ul_for_var(expression, mi_obj, expr_type, is_root, plus_or_minus='', child_tree='', numchild=0){
-        let delete_button = (is_root && expr_type === 'expr') ? <span className='glyphicon glyphicon-trash pointer' onClick={()=>GdbVariable.delete_gdb_variable(mi_obj.name)}/> : ''
+        let glyph_style = {fontSize: '0.8em', paddingLeft: '5px'}
+            ,delete_button = (is_root && expr_type === 'expr') ? <span style={glyph_style} className='glyphicon glyphicon-trash pointer' onClick={()=>GdbVariable.delete_gdb_variable(mi_obj.name)}/> : ''
             , has_children = numchild > 0
             , can_draw_tree = (has_children && (expr_type === 'expr' || expr_type === 'local'))  // hover var can't draw tree
-            , tree = can_draw_tree ? <span className='glyphicon glyphicon-tree-deciduous pointer' onClick={()=>GdbVariable.click_draw_tree_gdb_variable(mi_obj.name)} /> : ''
+            , tree = can_draw_tree ? <span style={glyph_style} className='glyphicon glyphicon-tree-deciduous pointer' onClick={()=>GdbVariable.click_draw_tree_gdb_variable(mi_obj.name)} /> : ''
             , toggle_classes = has_children ? 'pointer' : ''
             , val = _.isString(mi_obj.value) ? Memory.make_addrs_into_links_react(mi_obj.value) : mi_obj.value
             , plot_content = ''
@@ -105,11 +106,19 @@ class GdbVariable extends React.Component {
         if(mi_obj.can_plot && mi_obj.show_plot){
             // dots are not allowed in the dom as id's. replace with '-'.
             let id = mi_obj.dom_id_for_plot
-            plot_button = <span className='pointer glyphicon glyphicon-ban-circle' onClick={()=>GdbVariable.click_toggle_plot(mi_obj.name)} title='remove plot'></span>
+            plot_button = <span style={glyph_style}
+                                className='pointer glyphicon glyphicon-ban-circle'
+                                onClick={()=>GdbVariable.click_toggle_plot(mi_obj.name)}
+                                title='remove x/y plot'
+                            />
             plot_content = <div id={id} className='plot' />
 
         }else if(mi_obj.can_plot && !mi_obj.show_plot){
-            plot_button = <img src='/static/images/ploticon.png' className='pointer' onClick={()=>GdbVariable.click_toggle_plot(mi_obj.name)} />
+            plot_button = <span style={glyph_style}
+                                className='glyphicon glyphicon glyphicon-equalizer pointer'
+                                onClick={()=>GdbVariable.click_toggle_plot(mi_obj.name)}
+                                title='show x/y plot'
+                           />
         }
 
         return <ul key={expression} className='variable'>
@@ -228,8 +237,9 @@ class GdbVariable extends React.Component {
         //     }
 
         let parent_name = store.get('expr_gdb_parent_var_currently_fetching_children')
-
-        store.set('expr_gdb_parent_var_currently_fetching_children', null)
+        if(!parent_name){
+            console.error('developer error: gdb created child variable, but the parent variable is unknown')
+        }
 
         // get the parent object of these children
         let expressions = store.get('expressions')

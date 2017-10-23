@@ -22,7 +22,8 @@ class SourceCode extends React.Component {
         'source_code_state',
         'make_current_line_visible',
         'render_paused_frame_or_user_selection',
-        'current_theme'
+        'current_theme',
+        'inferior_binary_path'
     ]
 
     constructor() {
@@ -257,12 +258,14 @@ class SourceCode extends React.Component {
     }
 
     componentDidUpdate(){
-        if (this.state.source_code_state === constants.source_code_states.SOURCE_CACHED || this.state.source_code_state === constants.source_code_states.ASSM_AND_SOURCE_CACHED){
+        if (this.state.source_code_state === constants.source_code_states.SOURCE_CACHED ||
+            this.state.source_code_state === constants.source_code_states.ASSM_AND_SOURCE_CACHED)
+        {
             if (this.state.make_current_line_visible){
                 SourceCode.make_current_line_visible()
+                store.set('make_current_line_visible', false)
             }
         }
-        store.set('make_current_line_visible', false)
     }
     static make_current_line_visible(){
         SourceCode.scroll_to_jq_selector($("#scroll_to_line"))

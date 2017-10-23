@@ -2,8 +2,10 @@
 import {store} from './store.js';
 import GdbApi from './GdbApi.js';
 import constants from './constants.js';
+import Modal from './Modal.js';
 
 const FileOps = {
+    warning_shown_for_old_binary: false,
     unfetchable_disassembly_addresses: {},
     disassembly_addr_being_fetched: null,
     init: function(){
@@ -114,6 +116,24 @@ const FileOps = {
         , cached_source_files = store.get('cached_source_files')
         cached_source_files.push(new_source_file)
         store.set('cached_source_files', cached_source_files)
+        FileOps.warning_shown_for_old_binary = false
+        FileOps.show_modal_if_file_modified_after_binary(fullname, new_source_file.last_modified_unix_sec)
+    },
+    /**
+     * Show modal warning if user is trying to show a file that was modified after the binary was compiled
+     */
+    show_modal_if_file_modified_after_binary(fullname, src_last_modified_unix_sec){
+        if(store.get('inferior_binary_path')){
+            if((src_last_modified_unix_sec > store.get('inferior_binary_path_last_modified_unix_sec'))
+                    && FileOps.warning_shown_for_old_binary === false){
+                Modal.render('Warning', `A source file was modified <bold>after</bold> the binary was compiled. Recompile the binary, then try again. Otherwise the source code may not
+                    match the binary.
+                    <p>
+                    <p>Source file: ${fullname}, modified ${moment(src_last_modified_unix_sec * 1000).format(constants.DATE_FORMAT)}
+                    <p>Binary: ${store.get('inferior_binary_path')}, modified ${moment(store.get('inferior_binary_path_last_modified_unix_sec') * 1000).format(constants.DATE_FORMAT)}`)
+                FileOps.warning_shown_for_old_binary = true
+            }
+        }
     },
     get_cached_assembly_for_file: function(fullname){
         for(let file of store.get('cached_source_files')){
@@ -224,7 +244,7 @@ const FileOps = {
         let mi_response_format = FileOps.get_dissasembly_format_num(store.get('gdb_version_array'))
         if(_.isString(fullname) && fullname.startsWith('/')){
             if(store.get('interpreter') === 'gdb'){
-                return `-data-disassemble -f ${fullname} -l ${start_line} -n 100 -- ${mi_response_format}`
+                return `-data-disassemble -f ${fullname} -l ${start_line} -n 1000 -- ${mi_response_format}`
             }else{
                 console.log('TODOLLDB - get mi command to disassemble')
                 return `disassemble --frame`

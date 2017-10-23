@@ -273,7 +273,6 @@ const initial_store_data = {
     // binary selection
     inferior_binary_path: null,
     inferior_binary_path_last_modified_unix_sec: null,
-    warning_shown_for_old_binary: false,
 
     // registers
     register_names: [],

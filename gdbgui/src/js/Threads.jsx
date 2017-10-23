@@ -71,7 +71,14 @@ class Threads extends React.Component {
             let stack = Threads.get_stack_for_thread(thread.frame, this.state.stack, is_current_thread_being_rendered)
             let row_data = Threads.get_row_data_for_stack(stack, this.state.selected_frame_num, thread.frame.addr, thread.id, is_current_thread_being_rendered)
             content.push(Threads.get_thread_header(thread, is_current_thread_being_rendered))
-            content.push(<ReactTable data={row_data} style={{'fontSize': "0.9em", marginBottom: 0}} key={thread.id} header={['func', 'file', 'addr', 'args']} />)
+            content.push(<ReactTable
+                                data={row_data}
+                                style={{'fontSize': "0.9em", marginBottom: 0}}
+                                key={thread.id}
+                                header={['func', 'file', 'addr', 'args']}
+                                classes={['table-bordered', 'table-striped']}
+                            />)
+            content.push(<br key={thread.id +'br'}/>)
         }
         return <div>{content}</div>
     }
@@ -92,16 +99,18 @@ class Threads extends React.Component {
 
     static get_thread_header(thread, is_current_thread_being_rendered){
         // add thread name
-        let onclick = null
+        let status
         , cls = ''
         if(is_current_thread_being_rendered){
             cls = 'bold'
+            status = <span>(current thread)</span>
         }else{
-            onclick = ()=>{Threads.select_thread_id(thread.id)}
-            cls = 'pointer'
+            status = <button className='pointer btn btn-default btn-xs'
+                            onClick={()=>{Threads.select_thread_id(thread.id)}}
+                     >switch to thread</button>
         }
-        return <span key={'thread'+thread.id} onClick={onclick} className={`${cls}`} style={{fontSize: '0.9em'}}>
-                    {Memory.make_addrs_into_links_react(thread['target-id'])}, core {thread.core}, {thread.state}, id {thread.id}
+        return <span key={'thread'+thread.id} className={`${cls}`} style={{fontSize: '0.9em'}}>
+                     {status} {Memory.make_addrs_into_links_react(thread['target-id'])}, core {thread.core}, {thread.state}, id {thread.id}
                 </span>
     }
     static get_frame_row(frame, is_selected_frame, thread_id, is_current_thread_being_rendered, frame_num){

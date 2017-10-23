@@ -80,16 +80,18 @@ class InferiorProgramInfo extends React.Component {
                 return(
                     <div>
                         <span>inferior program: PID {this.state.inferior_pid}</span>
+                        <br/>
                         <div className="dropdown btn-group">
 
                             <button className="btn btn-default btn-xs dropdown-toggle" type="button" data-toggle="dropdown">{this.state.selected_signal}
-                                <span className="caret"> </span>
+                                <span className="caret" style={{marginLeft: '5px'}}> </span>
                             </button>
                             <ul className="dropdown-menu">
                               {signals}
                             </ul>
                             <button className='btn btn-default btn-xs'
                                         id='step_instruction_button'
+                                        style={{marginLeft: '5px'}}
                                         type='button'
                                         title={`Send signal to pid ${this.state.inferior_pid}`}
                                         onClick={this.send_signal}
