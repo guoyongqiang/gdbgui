@@ -155,6 +155,13 @@ def colorize(text):
 def client_connected():
     dbprint('Client websocket connected in async mode "%s", id %s' % (socketio.async_mode, request.sid))
 
+    # see if user wants to connect to existing gdbpid
+    gdbpid = request.args.get('gdbpid', '')
+
+    if gdbpid:
+        print('TODO: connect to GdbController with the following gdbpid')
+        print(gdbpid)
+
     # give each client their own gdb instance
     if request.sid not in _gdb_state['gdb_controllers'].keys():
         dbprint('new sid', request.sid)
@@ -277,6 +284,7 @@ def get_extra_files():
 def gdbgui():
     """Render the main gdbgui interface"""
     interpreter = 'lldb' if app.config['LLDB'] else 'gdb'
+    gdbpid = request.args.get('gdbpid', '')
 
     THEMES = ['default', 'monokai']
     initial_data = {
@@ -285,7 +293,8 @@ def gdbgui():
             'initial_binary_and_args': app.config['initial_binary_and_args'],
             'show_gdbgui_upgrades': app.config['show_gdbgui_upgrades'],
             'themes': THEMES,
-            'signals': SIGNAL_NAME_TO_NUM
+            'signals': SIGNAL_NAME_TO_NUM,
+            'gdbpid': gdbpid,
         }
 
     return render_template('gdbgui.pug',
@@ -306,6 +315,20 @@ def send_signal_to_pid():
     pid = int(request.args.get('pid'))
     os.kill(pid, signal_num)
     return jsonify({'message': 'sent signal %s (%s) to process id %s' % (signal_name, signal_num, str(pid))})
+
+
+@app.route('/dashboard')
+def dashboard():
+    """display a dashboard with a list of all running gdb processes
+    and ability to kill them, or open a new tab to work with that
+    GdbController instance"""
+    controllers = _gdb_state['gdb_controllers']
+    tabs = []
+    for sid, controller in controllers.items():
+        tabs.append({'gdbpid': controller.gdb_process.pid,
+                    'cmd': controller.cmd,
+                    'abs_gdb_path': controller.abs_gdb_path})
+    return render_template('dashboard.pug', tabs=tabs)
 
 
 @app.route('/shutdown')

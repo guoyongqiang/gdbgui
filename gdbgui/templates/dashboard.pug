@@ -1,0 +1,16 @@
+doctype html
+html
+    head
+        title Dashboard - gdbgui
+        base(target='_blank')
+        link(href='static/vendor/css/bootstrap.min.css', rel='stylesheet')
+
+    body(style='margin: 10px;')
+        h1 gdbgui dashboard
+
+        h2 active sessions
+
+        - for c in tabs
+            li gdb pid #{c['pid']}
+                a(href="/?gdbpid=#{c['gdbpid']}")
+                    button.btn.btn-primary.btn-sm(style='margin-bottom: 5px') launch
